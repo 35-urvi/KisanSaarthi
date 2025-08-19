@@ -8,8 +8,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .models import UserProfile
+from dotenv import load_dotenv
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .ml.fertilizer_model import predict_from_payload
+from .ml.crop_model import predict_crop_from_payload
+from bs4 import BeautifulSoup
+from datetime import datetime
+
 
 
 
@@ -279,3 +286,131 @@ def forgot_password_reset(request):
         return JsonResponse({"success": True, "message": "Password reset successful"})
     except UserProfile.DoesNotExist:
         return JsonResponse({"success": False, "error": "User not found"}, status=404)
+    
+load_dotenv()
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
+@api_view(["GET"])
+def get_weather_forecast(request):
+    city = request.GET.get("city")
+    if not OPENWEATHER_API_KEY:
+        return Response({"error": "API key not configured"}, status=500)
+
+    try:
+        # Step 1: Current weather
+        current_url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
+        current_data = requests.get(current_url).json()
+
+        if "cod" in current_data and current_data["cod"] != 200:
+            return Response({"error": current_data.get("message", "Error fetching current weather")}, status=400)
+
+        # Step 2: 5-day / 3-hour forecast
+        forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
+        forecast_data = requests.get(forecast_url).json()
+
+        if "list" not in forecast_data:
+            return Response({"error": forecast_data.get("message", "Error fetching forecast")}, status=400)
+
+        # Step 3: Group into daily summary
+        daily_forecast = {}
+        for entry in forecast_data["list"]:
+            # Convert timestamp → YYYY-MM-DD string
+            date_str = datetime.fromtimestamp(entry["dt"]).strftime("%Y-%m-%d")
+
+            if date_str not in daily_forecast:
+                daily_forecast[date_str] = {
+                    "min": float(entry["main"]["temp_min"]),
+                    "max": float(entry["main"]["temp_max"]),
+                    "condition": entry["weather"][0]["description"].title(),
+                    "icon": entry["weather"][0]["icon"],
+                    "humidity": int(entry["main"]["humidity"]),
+                    "windSpeed": float(entry["wind"]["speed"])
+                }
+            else:
+                daily_forecast[date_str]["min"] = min(daily_forecast[date_str]["min"], float(entry["main"]["temp_min"]))
+                daily_forecast[date_str]["max"] = max(daily_forecast[date_str]["max"], float(entry["main"]["temp_max"]))
+
+        # Take only 5 days
+        forecast_list = []
+        for date, info in list(daily_forecast.items())[:5]:
+            forecast_list.append({
+                "date": date,
+                **info
+            })
+
+        # Final response
+        return Response({
+            "city": city,
+            "current": {
+                "temp": float(current_data["main"]["temp"]),
+                "condition": current_data["weather"][0]["description"].title(),
+                "humidity": int(current_data["main"]["humidity"]),
+                "windSpeed": float(current_data["wind"]["speed"]),
+                "icon": current_data["weather"][0]["icon"]
+            },
+            "forecast": forecast_list
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(["POST"])
+def recommend_fertilizer(request):
+    try:
+        payload = request.data if hasattr(request, "data") else json.loads(request.body or "{}")
+        result = predict_from_payload(payload)
+        return Response(result)
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
+
+
+@api_view(["POST"])
+def recommend_crop(request):
+    try:
+        payload = request.data if hasattr(request, "data") else json.loads(request.body or "{}")
+        result = predict_crop_from_payload(payload)
+        return Response(result)
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
+    
+
+@api_view(["GET"])
+def scrape_schemes(request):
+    url = "https://www.india.gov.in/topics/agriculture"
+    headers = {"User-Agent": "Mozilla/5.0"}  # helps avoid blocking
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    schemes = []
+    for idx, item in enumerate(soup.select(".views-row"), start=1):
+        # Title + Link
+        title_tag = item.select_one(".views-field-title a")
+        if not title_tag:   # skip if no title
+            continue
+
+        title = title_tag.get_text(strip=True)
+        link = "https://www.india.gov.in" + title_tag.get("href", "#")
+
+        # Description (optional)
+        desc_tag = item.select_one(".views-field-body p")
+        desc = desc_tag.get_text(strip=True) if desc_tag else "Description not available"
+
+        schemes.append({
+            "id": idx,
+            "title": title,
+            "shortDescription": desc[:150] + ("..." if len(desc) > 150 else ""),
+            "fullDescription": desc,
+            "officialLink": link,
+            "department": "Government of India",
+            "category": "Agriculture",
+            "state": "All India",
+            "eligibility": "Check official link for details",
+            "benefits": ["Details available on official site"],
+            "howToApply": "Visit official website",
+            "helpline": "N/A",
+            "email": "N/A",
+            "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
+        })
+
+    return Response(schemes)

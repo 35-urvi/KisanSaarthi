@@ -8,6 +8,11 @@ urlpatterns = [
     path("forgot-password/send-otp/", views.forgot_password_send_otp),
     path("forgot-password/verify-otp/", views.forgot_password_verify_otp),
     path("forgot-password/reset/", views.forgot_password_reset),
-    path("login/", views.login, name="login")
+    path("login/", views.login, name="login"),
+    path("weather/", views.get_weather_forecast, name="get_weather_forecast"),
+    path("fertilizer/recommend/", views.recommend_fertilizer, name="recommend_fertilizer"),
+    path("crop/recommend/", views.recommend_crop, name="recommend_crop"),
+    path("scrape-schemes/", views.scrape_schemes, name="scrape_schemes"),
+
 
 ]
