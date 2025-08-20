@@ -295,6 +295,10 @@ const Signup = () => {
 
 
   const [errors, setErrors] = useState({})
+
+  // Password validation states
+  const [passwordErrors, setPasswordErrors] = useState({})
+  const [passwordStrength, setPasswordStrength] = useState(0)
   const [showOtpFields, setShowOtpFields] = useState(false)
   const [gpsLoading, setGpsLoading] = useState(false)
   const [locationPermission, setLocationPermission] = useState('prompt')
@@ -428,8 +432,8 @@ const Signup = () => {
     const newErrors = {}
     if (!formData.password) {
       newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+    } else if (passwordStrength < 3) {
+      newErrors.password = 'Password is too weak. Please choose a stronger password.'
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match'
@@ -462,6 +466,58 @@ const Signup = () => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }))
     }
+    
+    // Validate password strength when password changes
+    if (field === 'password') {
+      validatePasswordStrength(value)
+    }
+  }
+
+  // Password strength validation
+  const validatePasswordStrength = (password) => {
+    const errors = {}
+    let strength = 0
+    
+    if (password.length < 8) {
+      errors.length = 'Password must be at least 8 characters long'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.uppercase = 'Password must contain at least one uppercase letter'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.lowercase = 'Password must contain at least one lowercase letter'
+    } else {
+      strength += 1
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.number = 'Password must contain at least one number'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.special = 'Password must contain at least one special character'
+    } else {
+      strength += 1
+    }
+    
+    setPasswordErrors(errors)
+    setPasswordStrength(strength)
+  }
+
+  // Get password strength color and text
+  const getPasswordStrengthInfo = () => {
+    if (passwordStrength <= 2) return { color: 'text-red-600', text: 'Weak', bgColor: 'bg-red-100' }
+    if (passwordStrength <= 3) return { color: 'text-yellow-600', text: 'Fair', bgColor: 'bg-blue-100' }
+    if (passwordStrength <= 4) return { color: 'text-blue-600', text: 'Good', bgColor: 'bg-blue-100' }
+    return { color: 'text-green-600', text: 'Strong', bgColor: 'bg-green-100' }
   }
 
   // GPS Location Functions
@@ -650,6 +706,13 @@ const handleVerifyOtp = async () => {
     const data = await response.json();
 
     if (response.ok) {
+      if (data.token) {
+        localStorage.setItem("token", data.token)
+      }
+      if (formData.firstName || formData.lastName) {
+        const fullName = `${formData.firstName ?? ''} ${formData.lastName ?? ''}`.trim()
+        if (fullName) localStorage.setItem("userName", fullName)
+      }
       alert("Signup successful");
       navigate("/login");
     } else {
@@ -905,6 +968,46 @@ const handleVerifyOtp = async () => {
                     error={errors.password}
                     required
                   />
+                  
+                  {/* Password Strength Indicator */}
+                  {formData.password && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium text-stone-600">Password Strength:</span>
+                        <span className={`text-sm font-medium px-2 py-1 rounded ${
+                          passwordStrength <= 2 ? 'bg-red-100 text-red-600' : 
+                          passwordStrength <= 3 ? 'bg-yellow-100 text-yellow-600' : 
+                          passwordStrength <= 4 ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        }`}>
+                          {passwordStrength <= 2 ? 'Weak' : 
+                           passwordStrength <= 3 ? 'Fair' : 
+                           passwordStrength <= 4 ? 'Good' : 'Strong'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-stone-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            passwordStrength <= 2 ? 'bg-red-500' : 
+                            passwordStrength <= 3 ? 'bg-yellow-500' : 
+                            passwordStrength <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Password Validation Messages */}
+                  {formData.password && Object.keys(passwordErrors).length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {Object.entries(passwordErrors).map(([key, message]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          {message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                       <Input
                     label="Confirm Password"

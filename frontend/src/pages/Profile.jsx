@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import TopBar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
@@ -37,23 +37,22 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
 
-  // Mock user data based on signup form structure
+  // Real user data from backend
   const [userData, setUserData] = useState({
-    firstName: 'राम',
-    lastName: 'प्रसाद',
-    email: 'ram.prasad@gmail.com',
-    phone: '9876543210',
-    state: 'up',
-    district: 'lucknow',
-    village: 'malihabad',
-    latitude: '26.8467',
-    longitude: '80.9462',
-    crops: ['wheat', 'rice', 'sugarcane'],
-    joinDate: '2023-08-15',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    state: '',
+    district: '',
+    village: '',
+    latitude: '',
+    longitude: '',
+    dateJoined: '',
+    farmSize: '',
+    experience: '',
+    bio: '',
     profileImage: null,
-    bio: 'Experienced farmer with 15+ years in sustainable agriculture',
-    farmSize: '5.2 acres',
-    experience: '15 years'
   })
 
   const [tempUserData, setTempUserData] = useState({ ...userData })
@@ -62,6 +61,44 @@ const Profile = () => {
     newPassword: '',
     confirmPassword: ''
   })
+
+  // Password validation states
+  const [passwordErrors, setPasswordErrors] = useState({})
+  const [passwordStrength, setPasswordStrength] = useState(0)
+
+  // Load user profile data on component mount
+  useEffect(() => {
+    fetchProfileData()
+  }, [])
+
+  const fetchProfileData = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No token found')
+        return
+      }
+
+      const response = await fetch('http://localhost:8000/api/profile/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setUserData(data.profile)
+          setTempUserData(data.profile)
+        }
+      } else {
+        console.error('Failed to fetch profile data')
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+    }
+  }
 
   // Animation variants
   const fadeInUp = {
@@ -87,27 +124,26 @@ const Profile = () => {
       punjab: 'Punjab',
       haryana: 'Haryana',
       rajasthan: 'Rajasthan',
-      mp: 'Madhya Pradesh'
+      mp: 'Madhya Pradesh',
+      gujarat: 'Gujarat'
     },
     districts: {
       lucknow: 'Lucknow',
       kanpur: 'Kanpur',
       agra: 'Agra',
       ludhiana: 'Ludhiana',
-      amritsar: 'Amritsar'
+      amritsar: 'Amritsar',
+      ahmedabad: 'Ahmedabad',
+      surat: 'Surat',
+      baroda: 'Baroda'
     },
     villages: {
       malihabad: 'Malihabad',
       'bakshi-ka-talab': 'Bakshi Ka Talab',
-      'mohanlalganj': 'Mohanlalganj'
-    },
-    crops: {
-      wheat: 'Wheat',
-      rice: 'Rice',
-      sugarcane: 'Sugarcane',
-      cotton: 'Cotton',
-      maize: 'Maize',
-      pulses: 'Pulses'
+      'mohanlalganj': 'Mohanlalganj',
+      viramgam: 'Viramgam',
+      kalol: 'Kalol',
+      mandal: 'Mandal'
     }
   }
 
@@ -115,7 +151,7 @@ const Profile = () => {
   const profileStats = [
     {
       title: "Years of Experience",
-      value: userData.experience,
+      value: userData.experience || "Not specified",
       icon: <Calendar className="w-5 h-5" />,
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
@@ -123,23 +159,23 @@ const Profile = () => {
     },
     {
       title: "Farm Size",
-      value: userData.farmSize,
+      value: userData.farmSize || "Not specified",
       icon: <Sprout className="w-5 h-5" />,
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200"
     },
     {
-      title: "Crops Grown",
-      value: `${userData.crops.length} Types`,
+      title: "Member Since",
+      value: userData.dateJoined ? new Date(userData.dateJoined).getFullYear().toString() : "Not specified",
       icon: <Award className="w-5 h-5" />,
       color: "from-amber-500 to-amber-600",
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200"
     },
     {
-      title: "Member Since",
-      value: new Date(userData.joinDate).getFullYear().toString(),
+      title: "Location",
+      value: userData.village && userData.district ? `${locationData.villages[userData.village] || userData.village}, ${locationData.districts[userData.district] || userData.district}` : "Not specified",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-50",
@@ -161,16 +197,96 @@ const Profile = () => {
 
   const handlePasswordChange = (field, value) => {
     setPasswordData(prev => ({ ...prev, [field]: value }))
+    
+    // Validate password strength when new password changes
+    if (field === 'newPassword') {
+      validatePasswordStrength(value)
+    }
+  }
+
+  // Password strength validation
+  const validatePasswordStrength = (password) => {
+    const errors = {}
+    let strength = 0
+    
+    if (password.length < 8) {
+      errors.length = 'Password must be at least 8 characters long'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.uppercase = 'Password must contain at least one uppercase letter'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.lowercase = 'Password must contain at least one lowercase letter'
+    } else {
+      strength += 1
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.number = 'Password must contain at least one number'
+    } else {
+      strength += 1
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.special = 'Password must contain at least one special character'
+    } else {
+      strength += 1
+    }
+    
+    setPasswordErrors(errors)
+    setPasswordStrength(strength)
+  }
+
+  // Get password strength color and text
+  const getPasswordStrengthInfo = () => {
+    if (passwordStrength <= 2) return { color: 'text-red-600', text: 'Weak', bgColor: 'bg-red-100' }
+    if (passwordStrength <= 3) return { color: 'text-yellow-600', text: 'Fair', bgColor: 'bg-yellow-100' }
+    if (passwordStrength <= 4) return { color: 'text-blue-600', text: 'Good', bgColor: 'bg-blue-100' }
+    return { color: 'text-green-600', text: 'Strong', bgColor: 'bg-green-100' }
   }
 
   // Save profile changes
   const handleSaveProfile = async () => {
     setLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setUserData({ ...tempUserData })
-    setEditMode(false)
-    setLoading(false)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('No authentication token found')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch('http://localhost:8000/api/profile/update/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tempUserData)
+      })
+
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        setUserData(data.profile)
+        setTempUserData(data.profile)
+        setEditMode(false)
+        alert('Profile updated successfully!')
+      } else {
+        alert(data.error || 'Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Failed to update profile. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Cancel edit mode
@@ -197,18 +313,57 @@ const Profile = () => {
 
   // Handle password change
   const handlePasswordUpdate = async () => {
+    // Validate password strength
+    if (Object.keys(passwordErrors).length > 0) {
+      alert('Please fix password validation errors before continuing')
+      return
+    }
+    
+    if (passwordStrength < 3) {
+      alert('Password is too weak. Please choose a stronger password.')
+      return
+    }
+    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert('Passwords do not match!')
       return
     }
     
     setLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    setShowPasswordFields(false)
-    setLoading(false)
-    alert('Password updated successfully!')
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('No authentication token found')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch('http://localhost:8000/api/profile/password/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(passwordData)
+      })
+
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        setPasswordErrors({})
+        setPasswordStrength(0)
+        setShowPasswordFields(false)
+        alert('Password updated successfully!')
+      } else {
+        alert(data.error || 'Failed to update password')
+      }
+    } catch (error) {
+      console.error('Error updating password:', error)
+      alert('Failed to update password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -242,7 +397,7 @@ const Profile = () => {
                     <User className="w-12 h-12 text-white" />
                   )}
                 </div>
-                <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-stone-50 transition-colors">
+                {/* <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-stone-50 transition-colors">
                   <Camera className="w-4 h-4 text-stone-600" />
                   <input 
                     type="file" 
@@ -250,26 +405,26 @@ const Profile = () => {
                     onChange={handleImageUpload}
                     className="hidden" 
                   />
-                </label>
+                </label> */}
               </div>
 
               {/* Profile Info */}
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2">
-                  {userData.firstName} {userData.lastName}
+                  {userData.firstName || 'User'} {userData.lastName || ''}
                 </h1>
-                <p className="text-emerald-100 text-lg mb-2">{userData.bio}</p>
+                <p className="text-emerald-100 text-lg mb-2">{userData.bio || 'No bio available'}</p>
                 <div className="flex items-center gap-4 text-sm text-emerald-100">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     <span>
-                      {locationData.villages[userData.village]}, {locationData.districts[userData.district]}
+                      {userData.village ? (locationData.villages[userData.village] || userData.village) : 'Location not set'}, {userData.district ? (locationData.districts[userData.district] || userData.district) : ''}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>Member since {new Date(userData.joinDate).getFullYear()}</span>
-                  </div>
+                    <span>Member since {userData.dateJoined ? new Date(userData.dateJoined).getFullYear() : 'N/A'}</span>
+                  </div> */}
                 </div>
               </div>
 
@@ -286,7 +441,7 @@ const Profile = () => {
             </div>
           </motion.div>
 
-          {/* Stats Section */}
+          {/* Profile Stats */}
           {/* <motion.div
             variants={staggerContainer}
             initial="hidden"
@@ -390,12 +545,12 @@ const Profile = () => {
                           {editMode ? (
                             <input
                               type="text"
-                              value={tempUserData.firstName}
+                              value={tempUserData.firstName || ''}
                               onChange={(e) => handleInputChange('firstName', e.target.value)}
                               className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
                             />
                           ) : (
-                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.firstName}</p>
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.firstName || 'Not specified'}</p>
                           )}
                         </div>
 
@@ -404,12 +559,12 @@ const Profile = () => {
                           {editMode ? (
                             <input
                               type="text"
-                              value={tempUserData.lastName}
+                              value={tempUserData.lastName || ''}
                               onChange={(e) => handleInputChange('lastName', e.target.value)}
                               className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
                             />
                           ) : (
-                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.lastName}</p>
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.lastName || 'Not specified'}</p>
                           )}
                         </div>
 
@@ -418,33 +573,25 @@ const Profile = () => {
                           {editMode ? (
                             <input
                               type="email"
-                              value={tempUserData.email}
+                              value={tempUserData.email || ''}
                               onChange={(e) => handleInputChange('email', e.target.value)}
                               className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
                             />
                           ) : (
                             <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700 flex items-center gap-2">
                               <Mail className="w-4 h-4 text-stone-500" />
-                              {userData.email}
+                              {userData.email || 'Not specified'}
                             </p>
                           )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-stone-600 mb-1">Phone</label>
-                          {editMode ? (
-                            <input
-                              type="tel"
-                              value={tempUserData.phone}
-                              onChange={(e) => handleInputChange('phone', e.target.value)}
-                              className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
-                            />
-                          ) : (
-                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700 flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-stone-500" />
-                              +91 {userData.phone}
-                            </p>
-                          )}
+                          <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700 flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-stone-500" />
+                            {userData.phone ? `+91 ${userData.phone}` : 'Not specified'}
+                          </p>
+                          <p className="text-xs text-stone-500 mt-1">Phone number cannot be changed for security reasons</p>
                         </div>
                       </div>
 
@@ -454,24 +601,63 @@ const Profile = () => {
                         
                         <div>
                           <label className="block text-sm font-medium text-stone-600 mb-1">State</label>
-                          <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-stone-500" />
-                            {locationData.states[userData.state]}
-                          </p>
+                          {editMode ? (
+                            <select
+                              value={tempUserData.state || ''}
+                              onChange={(e) => handleInputChange('state', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
+                            >
+                              <option value="">Select State</option>
+                              {Object.entries(locationData.states).map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700 flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-stone-500" />
+                              {userData.state ? (locationData.states[userData.state] || userData.state) : 'Not specified'}
+                            </p>
+                          )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-stone-600 mb-1">District</label>
-                          <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">
-                            {locationData.districts[userData.district]}
-                          </p>
+                          {editMode ? (
+                            <select
+                              value={tempUserData.district || ''}
+                              onChange={(e) => handleInputChange('district', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
+                            >
+                              <option value="">Select District</option>
+                              {Object.entries(locationData.districts).map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">
+                              {userData.district ? (locationData.districts[userData.district] || userData.district) : 'Not specified'}
+                            </p>
+                          )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-stone-600 mb-1">Village</label>
-                          <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">
-                            {locationData.villages[userData.village]}
-                          </p>
+                          {editMode ? (
+                            <select
+                              value={tempUserData.village || ''}
+                              onChange={(e) => handleInputChange('village', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
+                            >
+                              <option value="">Select Village</option>
+                              {Object.entries(locationData.villages).map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">
+                              {userData.village ? (locationData.villages[userData.village] || userData.village) : 'Not specified'}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -479,12 +665,13 @@ const Profile = () => {
                           {editMode ? (
                             <input
                               type="text"
-                              value={tempUserData.farmSize}
+                              value={tempUserData.farmSize || ''}
                               onChange={(e) => handleInputChange('farmSize', e.target.value)}
                               className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
+                              placeholder="e.g., 5.2 acres"
                             />
                           ) : (
-                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.farmSize}</p>
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.farmSize || 'Not specified'}</p>
                           )}
                         </div>
 
@@ -493,29 +680,15 @@ const Profile = () => {
                           {editMode ? (
                             <input
                               type="text"
-                              value={tempUserData.experience}
+                              value={tempUserData.experience || ''}
                               onChange={(e) => handleInputChange('experience', e.target.value)}
                               className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors"
+                              placeholder="e.g., 15 years"
                             />
                           ) : (
-                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.experience}</p>
+                            <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.experience || 'Not specified'}</p>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Crops Section */}
-                    <div className="mt-6">
-                      <h4 className="font-semibold text-stone-700 border-b border-stone-200 pb-2 mb-4">Crops Grown</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {userData.crops.map((crop, index) => (
-                          <span
-                            key={index}
-                            className="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium border border-emerald-200"
-                          >
-                            {locationData.crops[crop]}
-                          </span>
-                        ))}
                       </div>
                     </div>
 
@@ -524,14 +697,14 @@ const Profile = () => {
                       <h4 className="font-semibold text-stone-700 border-b border-stone-200 pb-2 mb-4">Bio</h4>
                       {editMode ? (
                         <textarea
-                          value={tempUserData.bio}
+                          value={tempUserData.bio || ''}
                           onChange={(e) => handleInputChange('bio', e.target.value)}
                           rows={3}
                           className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors resize-none"
                           placeholder="Tell us about your farming experience..."
                         />
                       ) : (
-                        <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.bio}</p>
+                        <p className="px-3 py-2 bg-stone-50 rounded-lg text-stone-700">{userData.bio || 'No bio available'}</p>
                       )}
                     </div>
                   </div>
@@ -598,6 +771,40 @@ const Profile = () => {
                                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                               </div>
+                              
+                              {/* Password Strength Indicator */}
+                              {passwordData.newPassword && (
+                                <div className="mt-2">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-sm font-medium text-stone-600">Password Strength:</span>
+                                    <span className={`text-sm font-medium px-2 py-1 rounded ${getPasswordStrengthInfo().bgColor} ${getPasswordStrengthInfo().color}`}>
+                                      {getPasswordStrengthInfo().text}
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full transition-all duration-300 ${
+                                        passwordStrength <= 2 ? 'bg-red-500' : 
+                                        passwordStrength <= 3 ? 'bg-yellow-500' : 
+                                        passwordStrength <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                                      }`}
+                                      style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Password Validation Messages */}
+                              {passwordData.newPassword && Object.keys(passwordErrors).length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  {Object.entries(passwordErrors).map(([key, message]) => (
+                                    <div key={key} className="flex items-center gap-2 text-sm text-red-600">
+                                      <AlertCircle className="w-4 h-4" />
+                                      {message}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
 
                             <div>
@@ -617,7 +824,7 @@ const Profile = () => {
                               disabled={loading}
                               className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
                             >
-                              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-5 h-5" />}
+                              {loading ? <Loader2 className="w-4 h-5" /> : <Lock className="w-4 h-5" />}
                               {loading ? 'Updating...' : 'Update Password'}
                             </motion.button>
                           </motion.div>
@@ -631,10 +838,10 @@ const Profile = () => {
                           Account Security Status
                         </h4>
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-emerald-700">
+                          {/* <div className="flex items-center gap-2 text-emerald-700">
                             <CheckCircle className="w-4 h-4" />
                             <span>Email verified</span>
-                          </div>
+                          </div> */}
                           <div className="flex items-center gap-2 text-emerald-700">
                             <CheckCircle className="w-4 h-4" />
                             <span>Phone number verified</span>
@@ -655,123 +862,6 @@ const Profile = () => {
                     <h3 className="text-2xl font-bold text-stone-800 mb-6">App Settings</h3>
                     
                     <div className="space-y-6">
-                      {/* Notification Settings */}
-                      <div className="p-6 border-2 border-stone-200 rounded-xl">
-                        <h4 className="font-semibold text-stone-700 mb-4 flex items-center gap-2">
-                          <Bell className="w-5 h-5" />
-                          Notification Preferences
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Weather Alerts</p>
-                              <p className="text-sm text-stone-600">Get notified about weather changes</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" defaultChecked className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Crop Health Updates</p>
-                              <p className="text-sm text-stone-600">Receive disease detection alerts</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" defaultChecked className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Market Updates</p>
-                              <p className="text-sm text-stone-600">Stay updated on crop prices</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" defaultChecked className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Community Updates</p>
-                              <p className="text-sm text-stone-600">Forum discussions and tips</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Language & Region */}
-                      <div className="p-6 border-2 border-stone-200 rounded-xl">
-                        <h4 className="font-semibold text-stone-700 mb-4 flex items-center gap-2">
-                          <Globe className="w-5 h-5" />
-                          Language & Region
-                        </h4>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-stone-600 mb-2">Language</label>
-                            <select className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors">
-                              <option value="en">English</option>
-                              <option value="hi">हिंदी</option>
-                              <option value="pa">ਪੰਜਾਬੀ</option>
-                              <option value="gu">ગુજરાતી</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-stone-600 mb-2">Unit System</label>
-                            <select className="w-full px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-emerald-400 focus:outline-none transition-colors">
-                              <option value="metric">Metric (Celsius, Kilometers)</option>
-                              <option value="imperial">Imperial (Fahrenheit, Miles)</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Data & Privacy */}
-                      <div className="p-6 border-2 border-stone-200 rounded-xl">
-                        <h4 className="font-semibold text-stone-700 mb-4 flex items-center gap-2">
-                          <Shield className="w-5 h-5" />
-                          Data & Privacy
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Location Tracking</p>
-                              <p className="text-sm text-stone-600">Allow location access for weather updates</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" defaultChecked className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-stone-700">Data Analytics</p>
-                              <p className="text-sm text-stone-600">Help improve our services</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" defaultChecked className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="pt-4 border-t border-stone-200">
-                            <p className="text-xs text-stone-500">
-                              We respect your privacy. Your data is encrypted and never shared with third parties without your consent. 
-                              Read our <a href="#" className="text-emerald-600 hover:underline">Privacy Policy</a> for more details.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Account Actions */}
                       <div className="p-6 border-2 border-red-200 rounded-xl bg-red-50">
                         <h4 className="font-semibold text-red-700 mb-4 flex items-center gap-2">
@@ -779,13 +869,37 @@ const Profile = () => {
                           Account Actions
                         </h4>
                         <div className="space-y-3">
-                          <button className="w-full px-4 py-2 text-left text-stone-700 hover:bg-white rounded-lg transition-colors">
+                          <button onClick={async ()=>{
+                            try{
+                              const token = localStorage.getItem('token')
+                              const res = await fetch('http://localhost:8000/api/profile/download/', { headers: { Authorization: `Bearer ${token}` }})
+                              const data = await res.json()
+                              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                              const url = URL.createObjectURL(blob)
+                              const a = document.createElement('a')
+                              a.href = url
+                              a.download = 'my_profile.json'
+                              a.click()
+                              URL.revokeObjectURL(url)
+                            }catch(e){ alert('Failed to download data') }
+                          }} className="w-full px-4 py-2 text-left text-stone-700 hover:bg-white rounded-lg transition-colors">
                             Download My Data
                           </button>
-                          <button className="w-full px-4 py-2 text-left text-orange-600 hover:bg-white rounded-lg transition-colors">
-                            Deactivate Account
-                          </button>
-                          <button className="w-full px-4 py-2 text-left text-red-600 hover:bg-white rounded-lg transition-colors">
+                          <button onClick={async ()=>{
+                            if(!confirm('Are you sure you want to delete your account? This cannot be undone.')) return
+                            try{
+                              const token = localStorage.getItem('token')
+                              const res = await fetch('http://localhost:8000/api/profile/delete/', { method:'POST', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }})
+                              const data = await res.json()
+                              if(res.ok && data.success){
+                                localStorage.removeItem('token');
+                                localStorage.removeItem('userName');
+                                window.location.href = '/login'
+                              }else{
+                                alert(data.error || 'Failed to delete account')
+                              }
+                            }catch(e){ alert('Failed to delete account') }
+                          }} className="w-full px-4 py-2 text-left text-red-600 hover:bg-white rounded-lg transition-colors">
                             Delete Account
                           </button>
                         </div>
@@ -796,72 +910,6 @@ const Profile = () => {
               </div>
             </motion.div>
           </div>
-
-          {/* Activity Timeline */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl p-8 shadow-lg border border-stone-200"
-          >
-            <h3 className="text-2xl font-bold text-stone-800 mb-6 flex items-center gap-2">
-              <Activity className="w-6 h-6 text-emerald-600" />
-              Recent Activity
-            </h3>
-            
-            <div className="space-y-4">
-              {[
-                {
-                  action: "Profile updated",
-                  time: "2 hours ago",
-                  description: "Changed profile picture and bio",
-                  icon: <User className="w-4 h-4" />,
-                  color: "bg-blue-100 text-blue-600"
-                },
-                {
-                  action: "Disease detection used",
-                  time: "1 day ago",
-                  description: "Analyzed wheat crop images",
-                  icon: <Camera className="w-4 h-4" />,
-                  color: "bg-green-100 text-green-600"
-                },
-                {
-                  action: "Weather alert received",
-                  time: "2 days ago",
-                  description: "Rain forecasted for next week",
-                  icon: <Bell className="w-4 h-4" />,
-                  color: "bg-amber-100 text-amber-600"
-                },
-                {
-                  action: "Marketplace activity",
-                  time: "3 days ago",
-                  description: "Listed wheat for sale",
-                  icon: <TrendingUp className="w-4 h-4" />,
-                  color: "bg-purple-100 text-purple-600"
-                },
-                {
-                  action: "Community post",
-                  time: "1 week ago",
-                  description: "Shared farming tips in forum",
-                  icon: <Activity className="w-4 h-4" />,
-                  color: "bg-teal-100 text-teal-600"
-                }
-              ].map((activity, index) => (
-                <div key={index} className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition-colors">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.color}`}>
-                    {activity.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-stone-800">{activity.action}</h4>
-                      <span className="text-sm text-stone-500">{activity.time}</span>
-                    </div>
-                    <p className="text-stone-600 text-sm mt-1">{activity.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div> */}
         </div>
       </main>
     </div>

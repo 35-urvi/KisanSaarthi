@@ -360,6 +360,9 @@ const handleResendOTP = async () => {
       })
       const data = await res.json()
       if (data.success) {
+        if (data.token) {
+          localStorage.setItem("token", data.token)
+        }
         alert("Password reset successful! Please login.")
         navigate("/login")
       } else {

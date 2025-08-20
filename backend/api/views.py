@@ -14,10 +14,11 @@ from rest_framework.response import Response
 from .ml.fertilizer_model import predict_from_payload
 from .ml.crop_model import predict_crop_from_payload
 from bs4 import BeautifulSoup
-from datetime import datetime
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
@@ -58,6 +59,27 @@ def send_otp_sms(phone: str, otp: str) -> bool:
         traceback.print_exc()
         return False
 
+
+def _generate_jwt_for_user(user, phone: str) -> str:
+    """Create a signed JWT for the given user."""
+    refresh = RefreshToken.for_user(user)
+    return str(refresh.access_token)
+
+def _get_user_from_token(request):
+    """Extract user from JWT token in Authorization header"""
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    
+    token = auth_header.split(' ')[1]
+    try:
+        # Decode the JWT token
+        from rest_framework_simplejwt.tokens import AccessToken
+        access_token = AccessToken(token)
+        user_id = access_token['user_id']
+        return User.objects.get(id=user_id)
+    except Exception:
+        return None
 
 @csrf_exempt
 def signup(request):
@@ -140,7 +162,10 @@ def verify_otp(request):
             # Clear session
             del request.session["signup_data"]
 
-            return JsonResponse({"message": "Signup successful"})
+            # Issue JWT (front-end may or may not use it immediately)
+            token = _generate_jwt_for_user(user, phone=signup_data["phone"])
+
+            return JsonResponse({"message": "Signup successful", "token": token})
 
         return JsonResponse({"error": "Invalid OTP"}, status=400)
 
@@ -203,12 +228,16 @@ def login(request):
     if not user.check_password(password):
         return JsonResponse({"success": False, "error": "Invalid password"}, status=401)
 
+    # Issue JWT
+    token = _generate_jwt_for_user(user, phone)
+
     return JsonResponse({
         "success": True,
         "message": "Login successful",
+        "token": token,
         "user": {
             "id": user.id,
-            "name": user.first_name,
+            "name": f"{user.first_name} {user.last_name}".strip(),
             "phone": phone
         }
     })
@@ -284,12 +313,154 @@ def forgot_password_reset(request):
         # Remove OTP after reset
         if phone in otp_store:
             del otp_store[phone]
-        return JsonResponse({"success": True, "message": "Password reset successful"})
+        # Optionally issue JWT after password reset
+        token = _generate_jwt_for_user(user, phone=phone)
+        return JsonResponse({"success": True, "message": "Password reset successful", "token": token})
     except UserProfile.DoesNotExist:
         return JsonResponse({"success": False, "error": "User not found"}, status=404)
     
 load_dotenv()
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
+@api_view(["GET"])
+def get_profile(request):
+    """Get user profile data"""
+    try:
+        user = _get_user_from_token(request)
+        if not user:
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        
+        profile = UserProfile.objects.get(user=user)
+        
+        # Get user data from both User and UserProfile models
+        profile_data = {
+            "firstName": user.first_name or "",
+            "lastName": user.last_name or "",
+            "email": user.email or "",
+            "phone": profile.phone or "",
+            "state": profile.state or "",
+            "district": profile.district or "",
+            "village": profile.village or "",
+            "isVerified": profile.is_verified,
+            "dateJoined": user.date_joined.strftime("%Y-%m-%d"),
+            # Optional fields that might not exist yet
+            "farmSize": getattr(profile, 'farm_size', "") or "",
+            "experience": getattr(profile, 'experience', "") or "",
+            "bio": getattr(profile, 'bio', "") or "",
+            "latitude": getattr(profile, 'latitude', "") or "",
+            "longitude": getattr(profile, 'longitude', "") or "",
+        }
+        
+        return JsonResponse({"success": True, "profile": profile_data})
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Profile not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@api_view(["POST"])
+def update_profile(request):
+    """Update user profile data"""
+    try:
+        user = _get_user_from_token(request)
+        if not user:
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        
+        profile = UserProfile.objects.get(user=user)
+        
+        data = request.data
+        
+        # Update User model fields
+        if 'firstName' in data:
+            user.first_name = data['firstName']
+        if 'lastName' in data:
+            user.last_name = data['lastName']
+        if 'email' in data and data['email'] != user.email:
+            # Check if email is already taken by another user
+            if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                return JsonResponse({"success": False, "error": "Email already taken"}, status=400)
+            user.email = data['email']
+            user.username = data['email']  # Update username too
+        
+        user.save()
+        
+        # Update UserProfile model fields
+        if 'phone' in data and data['phone'] != profile.phone:
+            # Check if phone is already taken by another profile
+            if UserProfile.objects.filter(phone=data['phone']).exclude(user=user).exists():
+                return JsonResponse({"success": False, "error": "Phone number already taken"}, status=400)
+            profile.phone = data['phone']
+        
+        if 'state' in data:
+            profile.state = data['state']
+        if 'district' in data:
+            profile.district = data['district']
+        if 'village' in data:
+            profile.village = data['village']
+        if 'farmSize' in data:
+            profile.farm_size = data['farmSize']
+        if 'experience' in data:
+            profile.experience = data['experience']
+        if 'bio' in data:
+            profile.bio = data['bio']
+        if 'latitude' in data:
+            profile.latitude = data['latitude']
+        if 'longitude' in data:
+            profile.longitude = data['longitude']
+        
+        profile.save()
+        
+        return JsonResponse({
+            "success": True, 
+            "message": "Profile updated successfully",
+            "profile": {
+                "firstName": user.first_name or "",
+                "lastName": user.last_name or "",
+                "email": user.email or "",
+                "phone": profile.phone or "",
+                "state": profile.state or "",
+                "district": profile.district or "",
+                "village": profile.village or "",
+                "farmSize": getattr(profile, 'farm_size', "") or "",
+                "experience": getattr(profile, 'experience', "") or "",
+                "bio": getattr(profile, 'bio', "") or "",
+                "latitude": getattr(profile, 'latitude', "") or "",
+                "longitude": getattr(profile, 'longitude', "") or "",
+            }
+        })
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Profile not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@api_view(["POST"])
+def update_password(request):
+    """Update user password"""
+    try:
+        user = _get_user_from_token(request)
+        if not user:
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        
+        data = request.data
+        
+        current_password = data.get('currentPassword')
+        new_password = data.get('newPassword')
+        confirm_password = data.get('confirmPassword')
+        
+        if not all([current_password, new_password, confirm_password]):
+            return JsonResponse({"success": False, "error": "All password fields are required"}, status=400)
+        
+        if new_password != confirm_password:
+            return JsonResponse({"success": False, "error": "New passwords do not match"}, status=400)
+        
+        if not user.check_password(current_password):
+            return JsonResponse({"success": False, "error": "Current password is incorrect"}, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return JsonResponse({"success": True, "message": "Password updated successfully"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 @api_view(["GET"])
 def get_weather_forecast(request):
@@ -415,3 +586,76 @@ def scrape_schemes(request):
         })
 
     return Response(schemes)
+
+@api_view(["GET"])
+def download_profile_data(request):
+    try:
+        user = _get_user_from_token(request)
+        if not user:
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        profile = UserProfile.objects.get(user=user)
+        data = {
+            "user": {
+                "id": user.id,
+                "firstName": user.first_name or "",
+                "lastName": user.last_name or "",
+                "email": user.email or "",
+                "dateJoined": user.date_joined.strftime("%Y-%m-%d"),
+            },
+            "profile": {
+                "phone": profile.phone or "",
+                "state": profile.state or "",
+                "district": profile.district or "",
+                "village": profile.village or "",
+                "bio": getattr(profile, 'bio', "") or "",
+                "farmSize": getattr(profile, 'farm_size', "") or "",
+                "experience": getattr(profile, 'experience', "") or "",
+                "latitude": getattr(profile, 'latitude', "") or "",
+                "longitude": getattr(profile, 'longitude', "") or "",
+            }
+        }
+        return JsonResponse(data)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Profile not found"}, status=404)
+
+@api_view(["POST"])
+def delete_account(request):
+    try:
+        user = _get_user_from_token(request)
+        if not user:
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        user.delete()
+        return JsonResponse({"success": True, "message": "Account deleted"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@api_view(["POST"])
+def train_yield_model(request):
+    try:
+        from .ml.yield_model import train_and_save
+        force = bool(request.data.get('force', False)) if hasattr(request, 'data') else False
+        result = train_and_save(force=force)
+        return Response(result)
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
+
+@api_view(["POST"])
+def predict_yield_endpoint(request):
+    try:
+        payload = request.data if hasattr(request, 'data') else json.loads(request.body or "{}")
+        crop = payload.get('cropName') or payload.get('crop')
+        season = payload.get('season')
+        year = int(payload.get('year'))
+        area = float(payload.get('area'))
+        if not all([crop, season, year, area]):
+            return Response({"error": "Missing required fields"}, status=400)
+
+        from .ml.yield_model import predict_yield
+        result = predict_yield(crop=crop, season=season, year=year, area=area)
+        # attach a simple confidence proxy from model variance isn't available -> use heuristic
+        result.update({
+            'confidence': 90
+        })
+        return Response(result)
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)

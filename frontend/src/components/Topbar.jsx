@@ -49,7 +49,7 @@ const TopBar = ({ sidebarOpen, setSidebarOpen }) => {
               <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-stone-700 hidden sm:block">User</span>
+              <span className="text-sm font-medium text-stone-700 hidden sm:block">{localStorage.getItem('userName') || 'User'}</span>
             </motion.button>
           </div>
         </div>

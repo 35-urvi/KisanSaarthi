@@ -180,6 +180,12 @@ const Login = () => {
       setLoading(false);
 
       if (data.success) {
+        if (data.token) {
+          localStorage.setItem("token", data.token)
+        }
+        if (data.user && data.user.name) {
+          localStorage.setItem("userName", data.user.name)
+        }
         alert("Login successful! Welcome back to KisanSaarthi!");
         // optionally save user info to localStorage
         // localStorage.setItem("user", JSON.stringify(data.user));

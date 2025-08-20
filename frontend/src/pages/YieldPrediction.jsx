@@ -118,26 +118,37 @@ const YieldPrediction = () => {
       })
     }, 100)
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock prediction logic - in real app, this would be an API call
-      const baseYield = Math.floor(Math.random() * 3000) + 2000 // 2000-5000 kg/ha
-      const totalYield = (baseYield * parseFloat(formData.area)).toFixed(2)
-      const yieldPerHa = baseYield.toFixed(2)
-      const quintalsPerHa = (baseYield / 100).toFixed(2)
-      
-      setPrediction({
-        yieldPerHa: yieldPerHa,
-        quintalsPerHa: quintalsPerHa,
-        totalYield: totalYield,
-        confidence: Math.floor(Math.random() * 15) + 85, // 85-100%
+    // Call backend API
+    fetch('http://localhost:8000/api/yield/predict/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         cropName: formData.cropName,
         season: formData.season,
-        year: formData.year,
-        area: formData.area
+        year: Number(formData.year),
+        area: Number(formData.area)
       })
-      setIsLoading(false)
-    }, 2500)
+    })
+      .then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Prediction failed')
+        // Map backend fields to UI state
+        setPrediction({
+          yieldPerHa: data.yieldPerHa,
+          quintalsPerHa: data.quintalsPerHa,
+          totalYield: data.totalYield,
+          confidence: data.confidence || 90,
+          cropName: formData.cropName,
+          season: formData.season,
+          year: formData.year,
+          area: formData.area
+        })
+      })
+      .catch((err) => {
+        console.error(err)
+        alert(err.message)
+      })
+      .finally(() => setIsLoading(false))
   }
 
   const isFormValid = () => {
