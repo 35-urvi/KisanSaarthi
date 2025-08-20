@@ -149,3 +149,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",   # your React app URL (Vite default)
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]

@@ -246,7 +246,7 @@ const Landing = () => {
             transition={{ duration: 1, delay: 0.2 }}
             className="text-5xl md:text-7xl font-bold text-stone-50 mb-6 drop-shadow-2xl"
           >
-            Empowering Farmers Through AI 🌿
+            Empowering Farmers 🌿
           </motion.h1>
 
           <motion.p

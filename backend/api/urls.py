@@ -13,6 +13,5 @@ urlpatterns = [
     path("fertilizer/recommend/", views.recommend_fertilizer, name="recommend_fertilizer"),
     path("crop/recommend/", views.recommend_crop, name="recommend_crop"),
     path("scrape-schemes/", views.scrape_schemes, name="scrape_schemes"),
-
-
+    
 ]

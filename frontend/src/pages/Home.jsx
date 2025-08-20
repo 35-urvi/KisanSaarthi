@@ -20,8 +20,11 @@ import {
   Camera,
   Clock
 } from "lucide-react"
+import { useNavigate} from "react-router-dom"
+
 
 const Home = () => {
+    const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [currentWeather] = useState({
     temp: 28,
@@ -91,12 +94,13 @@ const Home = () => {
   const featureCards = [
     {
       title: "Smart Crop Planner",
-      description: "Get AI-powered crop recommendations based on your location and conditions",
+      description: "Get crop recommendations based on your location conditions and soil data",
       icon: <Sprout className="w-8 h-8" />,
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
-      action: "Plan Crops"
+      action: "Plan Crops",
+      path: "/crop-recommendation"
     },
     {
       title: "Disease Detection",
@@ -105,7 +109,8 @@ const Home = () => {
       color: "from-red-500 to-red-600",
       bgColor: "bg-red-50",
       borderColor: "border-red-200",
-      action: "Scan Crop"
+      action: "Scan Crop",
+      path: "/disease-detection"
     },
     {
       title: "Weather Insights",
@@ -114,25 +119,28 @@ const Home = () => {
       color: "from-teal-500 to-teal-600",
       bgColor: "bg-teal-50",
       borderColor: "border-teal-200",
-      action: "Check Weather"
+      action: "Check Weather",
+      path: "/weather"
     },
     {
-      title: "Crop Calendar",
-      description: "Track your farming activities with smart reminders",
+      title: "Fertilizer Guide",
+      description: "Get Fertilizer recommendations based on your crop and soil data",
       icon: <Calendar className="w-8 h-8" />,
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
-      action: "View Calendar"
+      action: "View Calendar",
+      path: "/fertilizer-guide"
     },
     {
-      title: "Marketplace",
-      description: "Buy and sell crops, tools, and equipment",
+      title: "Goverment Schemes",
+      description: "view all schemes at one place and veiw its details",
       icon: <ShoppingCart className="w-8 h-8" />,
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
-      action: "Browse Market"
+      action: "Schemes",
+      path: "/gov-schema"
     },
     {
       title: "Community Forum",
@@ -141,7 +149,8 @@ const Home = () => {
       color: "from-amber-500 to-amber-600",
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",
-      action: "Join Discussion"
+      action: "Join Discussion",
+      path: "/community-forum"
     }
   ]
 
@@ -180,7 +189,7 @@ const Home = () => {
           >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Welcome back, राम प्रसाद! 🌾</h1>
+                <h1 className="text-3xl font-bold mb-2">Welcome back, User! 🌾</h1>
                 <p className="text-emerald-100 text-lg">Ready to make your farming more productive today?</p>
               </div>
               <div className="mt-4 md:mt-0 text-right">
@@ -197,7 +206,7 @@ const Home = () => {
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {quickStats.map((stat, index) => (
+            {/* {quickStats.map((stat, index) => (
               <motion.div
                 key={index}
                 variants={fadeInUp}
@@ -215,7 +224,7 @@ const Home = () => {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            ))} */}
           </motion.div>
 
           {/* Weather Widget */}
@@ -275,6 +284,7 @@ const Home = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(card.path)}
                   className={`w-full bg-gradient-to-r ${card.color} text-white py-2 px-4 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300`}
                 >
                   {card.action}
@@ -286,7 +296,7 @@ const Home = () => {
           {/* Recent Activities & Upcoming Tasks */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Activities */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
@@ -311,10 +321,10 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Upcoming Tasks */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 }}
@@ -341,7 +351,7 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </motion.div> */}
           </div>
         </div>
       </main>

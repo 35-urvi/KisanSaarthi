@@ -10,13 +10,14 @@ from django.contrib.auth.hashers import make_password
 from .models import UserProfile
 from dotenv import load_dotenv
 from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .ml.fertilizer_model import predict_from_payload
 from .ml.crop_model import predict_crop_from_payload
 from bs4 import BeautifulSoup
 from datetime import datetime
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 
 

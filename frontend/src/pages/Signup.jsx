@@ -301,14 +301,20 @@ const Signup = () => {
 
   // Sample data
   const states = [
+    {valuse:'gujarat',label:'Gujarat'},
     { value: 'up', label: 'Uttar Pradesh' },
     { value: 'punjab', label: 'Punjab' },
     { value: 'haryana', label: 'Haryana' },
-    { value: 'rajasthan', label: 'Rajasthan' },
-    { value: 'mp', label: 'Madhya Pradesh' }
+    // { value: 'rajasthan', label: 'Rajasthan' },
+    // { value: 'mp', label: 'Madhya Pradesh' }
   ]
 
   const districts = {
+    gujarat: [
+      { value: 'ahmedabad', label: 'Ahmedabad' },
+      { value: 'surat', label: 'Surat' },
+      { value: 'baroda', label: 'Baroda' }
+    ],
     up: [
       { value: 'lucknow', label: 'Lucknow' },
       { value: 'kanpur', label: 'Kanpur' },
@@ -335,6 +341,17 @@ const Signup = () => {
   }, [resendSeconds])
 
   const villages = {
+    ahmedabad: [
+      { value: 'viramgam', label: 'viramgam' },
+      { value: 'kalol', label: 'kalol' },
+      { value: 'mandal', label: 'mandal' }
+    ],
+    surat:[
+
+    ],
+    baroda:[
+
+    ],
     lucknow: [
       { value: 'malihabad', label: 'Malihabad' },
       { value: 'bakshi-ka-talab', label: 'Bakshi Ka Talab' },
@@ -381,15 +398,6 @@ const Signup = () => {
       { value: 'bapoli', label: 'Bapoli' }
     ]
   }
-
-  const crops = [
-    { value: 'wheat', label: 'Wheat' },
-    { value: 'rice', label: 'Rice' },
-    { value: 'sugarcane', label: 'Sugarcane' },
-    { value: 'cotton', label: 'Cotton' },
-    { value: 'maize', label: 'Maize' },
-    { value: 'pulses', label: 'Pulses' }
-  ]
 
   // Validation functions
   const validateStep1 = () => {
@@ -655,16 +663,16 @@ const handleVerifyOtp = async () => {
 };
 
 
-  const handleOTPSubmit = async () => {
-    if (validateOTP()) {
-      setLoading(true)
-      // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setLoading(false)
-      // Handle successful signup
-      alert('Signup successful! Welcome to KisanSaarthi!')
-    }
-  }
+  // const handleOTPSubmit = async () => {
+  //   if (validateOTP()) {
+  //     setLoading(true)
+  //     // Simulate OTP verification
+  //     await new Promise(resolve => setTimeout(resolve, 2000))
+  //     setLoading(false)
+  //     // Handle successful signup
+  //     alert('Signup successful! Welcome to KisanSaarthi!')
+  //   }
+  // }
 
   
 
@@ -707,7 +715,7 @@ const handleVerifyOtp = async () => {
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl p-8">
+        <Card className="w-full max-w-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -779,7 +787,7 @@ const handleVerifyOtp = async () => {
                   <h3 className="text-lg font-semibold text-stone-700 mb-6">Location Information</h3>
                   
                   {/* GPS Auto-fill Section */}
-                  <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                  {/* <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-emerald-600" />
@@ -804,7 +812,7 @@ const handleVerifyOtp = async () => {
                       Allow location access to automatically fill your address details
                     </p>
                     
-                    {/* GPS Coordinates Display */}
+                    GPS Coordinates Display
                     {formData.latitude && formData.longitude && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -818,7 +826,7 @@ const handleVerifyOtp = async () => {
                       </motion.div>
                     )}
                     
-                    {/* GPS Error Display */}
+                    GPS Error Display
                     <AnimatePresence>
                       {errors.gps && (
                         <motion.div
@@ -832,7 +840,7 @@ const handleVerifyOtp = async () => {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </div> */}
                   
                   <Select
                     label="State"

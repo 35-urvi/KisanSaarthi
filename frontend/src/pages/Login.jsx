@@ -281,7 +281,7 @@ const Login = () => {
             
             {/* Remember Me and Forgot Password */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
+              {/* <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.rememberMe}
@@ -289,7 +289,7 @@ const Login = () => {
                   className="w-4 h-4 text-emerald-600 border-stone-300 rounded focus:ring-emerald-500 focus:ring-2"
                 />
                 <span className="text-sm text-stone-600">Remember me</span>
-              </label>
+              </label> */}
               
               <button
                 type="button"
@@ -319,12 +319,12 @@ const Login = () => {
           </div>
 
           {/* Additional Info */}
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <div className="flex items-center gap-2 text-xs text-stone-500 bg-emerald-50 p-3 rounded-lg">
               <Shield className="h-4 w-4 text-emerald-600" />
               <span>Your data is secure and encrypted</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Sign Up Link */}
           <div className="text-center mt-6 pt-6 border-t border-stone-200">
@@ -342,11 +342,11 @@ const Login = () => {
           </div>
 
           {/* App Info */}
-          <div className="text-center mt-4">
+          {/* <div className="text-center mt-4">
             <p className="text-xs text-stone-500">
               Empowering farmers with technology and knowledge
             </p>
-          </div>
+          </div> */}
         </Card>
       </div>
     </div>

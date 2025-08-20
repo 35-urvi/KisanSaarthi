@@ -468,18 +468,18 @@ const FertilizerGuide = () => {
                             <span className="font-semibold text-stone-800">{recommendation.applicationMethod}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-4">
+                        {/* <div className="flex items-center justify-center gap-2 mb-4">
                           <CheckCircle className="w-6 h-6 text-emerald-600" />
                           <span className="text-emerald-700 font-semibold text-lg">
                             {recommendation.confidence}% Confidence
                           </span>
-                        </div>
-                        <div className="w-full bg-emerald-200 rounded-full h-3 mb-6">
+                        </div> */}
+                        {/* <div className="w-full bg-emerald-200 rounded-full h-3 mb-6">
                           <div 
                             className="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full transition-all duration-1000" 
                             style={{width: `${recommendation.confidence}%`}}
                           ></div>
-                        </div>
+                        </div> */}
                       </div>
                       <p className="text-stone-600 leading-relaxed text-sm max-w-sm mx-auto">
                         {recommendation.reason}

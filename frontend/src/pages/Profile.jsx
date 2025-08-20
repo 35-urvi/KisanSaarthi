@@ -287,7 +287,7 @@ const Profile = () => {
           </motion.div>
 
           {/* Stats Section */}
-          <motion.div
+          {/* <motion.div
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
@@ -311,7 +311,7 @@ const Profile = () => {
                 </div>
               </motion.div>
             ))}
-          </motion.div>
+          </motion.div> */}
 
           {/* Tabs and Content */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -798,7 +798,7 @@ const Profile = () => {
           </div>
 
           {/* Activity Timeline */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -861,7 +861,7 @@ const Profile = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </motion.div> */}
         </div>
       </main>
     </div>
