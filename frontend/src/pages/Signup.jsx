@@ -16,6 +16,7 @@ import {
   Loader2,
   Shield
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 // Reusable Components
 const Input = ({ 
@@ -669,7 +670,7 @@ const Signup = () => {
     const data = await response.json();
 
     if (response.ok) {
-      alert("OTP sent successfully");
+      toast.success("OTP sent successfully");
       setShowOtpFields(true)
        setCurrentStep(4)
       // Start resend cooldown timer
@@ -678,17 +679,17 @@ const Signup = () => {
       // Display OTP for development (remove in production)
       if (data.otp) {
         console.log("OTP for testing:", data.otp);
-        alert(`OTP for testing: ${data.otp}\n\nIn production, this will be sent via SMS.`);
+        toast.success(`OTP for testing: ${data.otp}`)
       }
       
       // setCurrentStep(prev => prev + 1)
       setOtpStep(true); // Move to OTP input step
     } else {
-      alert(data.error || "Signup failed");
+      toast.error(data.error || "Signup failed");
     }
   } catch (error) {
     console.error("Error during signup:", error);
-    alert("Something went wrong. Please try again.");
+    toast.error("Something went wrong. Please try again.");
   }
 };
 
@@ -713,15 +714,15 @@ const handleVerifyOtp = async () => {
         const fullName = `${formData.firstName ?? ''} ${formData.lastName ?? ''}`.trim()
         if (fullName) localStorage.setItem("userName", fullName)
       }
-      alert("Signup successful");
+      toast.success("Signup successful");
       navigate("/login");
     } else {
       console.log(data.s)
-      alert(data.error|| "OTP verification failed");
+      toast.error(data.error|| "OTP verification failed");
     }
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    alert("Something went wrong. Please try again.");
+    toast.error("Something went wrong. Please try again.");
   }
 };
 
@@ -1147,18 +1148,18 @@ const handleVerifyOtp = async () => {
                             const data = await res.json();
                             if (res.ok) {
                               setOtpSent(true)
-                              alert("OTP resent successfully")
+                              toast.success("OTP resent successfully")
                               // Display new OTP for development (remove in production)
                               if (data.otp) {
                                 console.log("New OTP for testing:", data.otp);
-                                alert(`New OTP for testing: ${data.otp}\n\nIn production, this will be sent via SMS.`);
+                                toast.success(`New OTP for testing: ${data.otp}`)
                               }
                               setResendSeconds(60)
                             } else {
-                              alert(data.error || "Failed to resend OTP")
+                              toast.error(data.error || "Failed to resend OTP")
                             }
                           } catch (err) {
-                            alert("Network error while resending OTP")
+                            toast.error("Network error while resending OTP")
                           }
                         }}
                         className={`text-sm font-medium transition-colors ${resendSeconds>0 ? 'text-stone-400 cursor-not-allowed' : 'text-emerald-600 hover:text-emerald-700'}`}

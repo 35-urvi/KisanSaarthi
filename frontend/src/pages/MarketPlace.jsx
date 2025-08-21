@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from "framer-motion"
 import TopBar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
@@ -344,11 +345,11 @@ const MarketPlace = () => {
 
       const validFiles = files.filter(file => {
         if (!validTypes.includes(file.type)) {
-          alert(`${file.name} is not a valid image format. Please use JPEG, PNG, or WebP.`)
+          toast.error(`${file.name} is not a valid image format. Please use JPEG, PNG, or WebP.`)
           return false
         }
         if (file.size > maxSize) {
-          alert(`${file.name} is too large. Please use images smaller than 5MB.`)
+          toast.error(`${file.name} is too large. Please use images smaller than 5MB.`)
           return false
         }
         return true

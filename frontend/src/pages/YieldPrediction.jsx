@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import toast from 'react-hot-toast'
 import { motion } from "framer-motion"
 import TopBar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
@@ -118,10 +119,14 @@ const YieldPrediction = () => {
       })
     }, 100)
 
-    // Call backend API
+    // Call backend API with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
+
     fetch('http://localhost:8000/api/yield/predict/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         cropName: formData.cropName,
         season: formData.season,
@@ -146,9 +151,13 @@ const YieldPrediction = () => {
       })
       .catch((err) => {
         console.error(err)
-        alert(err.message)
+        if (err.name === 'AbortError') {
+          toast.error('Request timed out. Please try again later or train the model first.')
+        } else {
+          toast.error(err.message)
+        }
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => { clearTimeout(timeoutId); setIsLoading(false) })
   }
 
   const isFormValid = () => {

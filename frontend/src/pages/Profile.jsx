@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import toast from 'react-hot-toast'
 import { motion } from "framer-motion"
 import TopBar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
@@ -75,7 +76,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        console.error('No token found')
+        toast.error('No authentication token found')
         return
       }
 
@@ -93,10 +94,10 @@ const Profile = () => {
           setTempUserData(data.profile)
         }
       } else {
-        console.error('Failed to fetch profile data')
+        toast.error('Failed to fetch profile data')
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      toast.error('Error fetching profile')
     }
   }
 
@@ -257,7 +258,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('No authentication token found')
+        toast.error('No authentication token found')
         setLoading(false)
         return
       }
@@ -277,13 +278,12 @@ const Profile = () => {
         setUserData(data.profile)
         setTempUserData(data.profile)
         setEditMode(false)
-        alert('Profile updated successfully!')
+        toast.success('Profile updated successfully!')
       } else {
-        alert(data.error || 'Failed to update profile')
+        toast.error(data.error || 'Failed to update profile')
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
-      alert('Failed to update profile. Please try again.')
+      toast.error('Failed to update profile. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -315,17 +315,17 @@ const Profile = () => {
   const handlePasswordUpdate = async () => {
     // Validate password strength
     if (Object.keys(passwordErrors).length > 0) {
-      alert('Please fix password validation errors before continuing')
+      toast.error('Please fix password validation errors before continuing')
       return
     }
     
     if (passwordStrength < 3) {
-      alert('Password is too weak. Please choose a stronger password.')
+      toast.error('Password is too weak. Please choose a stronger password.')
       return
     }
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Passwords do not match!')
+      toast.error('Passwords do not match!')
       return
     }
     
@@ -333,7 +333,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('No authentication token found')
+        toast.error('No authentication token found')
         setLoading(false)
         return
       }
@@ -354,13 +354,12 @@ const Profile = () => {
         setPasswordErrors({})
         setPasswordStrength(0)
         setShowPasswordFields(false)
-        alert('Password updated successfully!')
+        toast.success('Password updated successfully!')
       } else {
-        alert(data.error || 'Failed to update password')
+        toast.error(data.error || 'Failed to update password')
       }
     } catch (error) {
-      console.error('Error updating password:', error)
-      alert('Failed to update password. Please try again.')
+      toast.error('Failed to update password. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -881,7 +880,7 @@ const Profile = () => {
                               a.download = 'my_profile.json'
                               a.click()
                               URL.revokeObjectURL(url)
-                            }catch(e){ alert('Failed to download data') }
+                            }catch(e){ toast.error('Failed to download data') }
                           }} className="w-full px-4 py-2 text-left text-stone-700 hover:bg-white rounded-lg transition-colors">
                             Download My Data
                           </button>
@@ -896,9 +895,9 @@ const Profile = () => {
                                 localStorage.removeItem('userName');
                                 window.location.href = '/login'
                               }else{
-                                alert(data.error || 'Failed to delete account')
+                                toast.error(data.error || 'Failed to delete account')
                               }
-                            }catch(e){ alert('Failed to delete account') }
+                            }catch(e){ toast.error('Failed to delete account') }
                           }} className="w-full px-4 py-2 text-left text-red-600 hover:bg-white rounded-lg transition-colors">
                             Delete Account
                           </button>

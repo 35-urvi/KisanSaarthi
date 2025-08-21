@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from 'react-hot-toast'
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
-import Signup from "./pages/signup.jsx";
+import Signup from "./pages/Signup.jsx";
 import ForgotPassward from "./pages/ForgotPassword.jsx";
 import Home from "./pages/Home.jsx";
 import CropRecommendation from "./pages/CropRecommendation.jsx";
@@ -18,6 +19,7 @@ import Profile from "./pages/Profile.jsx";
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />

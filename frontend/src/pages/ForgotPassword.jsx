@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from "react-router-dom";
 import {
@@ -202,17 +203,28 @@ const ForgotPassword = () => {
     return Object.keys(newErrors).length === 0
   }
 
+  const [passwordErrors, setPasswordErrors] = useState({})
+  const [passwordStrength, setPasswordStrength] = useState(0)
+
   const validatePasswords = () => {
     const newErrors = {}
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required'
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = 'Password must be at least 6 characters'
-    }
+    // Strength same as Signup
+    const pw = formData.newPassword || ''
+    let strength = 0
+    const pe = {}
+    if (pw.length < 8) pe.length = 'Password must be at least 8 characters long'; else strength += 1
+    if (!/[A-Z]/.test(pw)) pe.uppercase = 'Must include an uppercase letter'; else strength += 1
+    if (!/[a-z]/.test(pw)) pe.lowercase = 'Must include a lowercase letter'; else strength += 1
+    if (!/\d/.test(pw)) pe.number = 'Must include a number'; else strength += 1
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pw)) pe.special = 'Must include a special character'; else strength += 1
+    setPasswordErrors(pe)
+    setPasswordStrength(strength)
+
+    if (!pw) newErrors.newPassword = 'New password is required'
+    else if (strength < 3) newErrors.newPassword = 'Password is too weak. Choose a stronger one.'
     if (formData.newPassword !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match'
     }
-    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -276,11 +288,12 @@ const ForgotPassword = () => {
         setOtpSent(true)
         setShowOtpFields(true)
         setCurrentStep(2)
+        toast.success('OTP sent successfully')
       } else {
-        alert(data.error)
+        toast.error(data.error || 'Failed to send OTP')
       }
     } catch (err) {
-      alert("Failed to send OTP")
+      toast.error('Failed to send OTP')
     }
     setLoading(false)
   }
@@ -307,11 +320,12 @@ const ForgotPassword = () => {
       const data = await res.json()
       if (data.success) {
         setCurrentStep(3)
+        toast.success('OTP verified successfully')
       } else {
-        alert(data.error)
+        toast.error(data.error || 'Invalid OTP')
       }
     } catch (err) {
-      alert("Failed to verify OTP")
+      toast.error('Failed to verify OTP')
     }
     setLoading(false)
   }
@@ -327,13 +341,10 @@ const handleResendOTP = async () => {
       body: JSON.stringify({ phone: formData.phone })
     })
     const data = await res.json()
-    if (data.success) {
-      alert("A new OTP has been sent to your phone.")
-    } else {
-      alert(data.error)
-    }
+    if (data.success) toast.success('A new OTP has been sent to your phone.')
+    else toast.error(data.error || 'Failed to resend OTP')
   } catch (err) {
-    alert("Failed to resend OTP")
+    toast.error('Failed to resend OTP')
   }
   setLoading(false)
 }
@@ -363,13 +374,13 @@ const handleResendOTP = async () => {
         if (data.token) {
           localStorage.setItem("token", data.token)
         }
-        alert("Password reset successful! Please login.")
+        toast.success('Password reset successful! Please login.')
         navigate("/login")
       } else {
-        alert(data.error)
+        toast.error(data.error || 'Failed to reset password')
       }
     } catch (err) {
-      alert("Failed to reset password")
+      toast.error('Failed to reset password')
     }
     setLoading(false)
   }
@@ -627,6 +638,46 @@ const handleResendOTP = async () => {
                     required
                     placeholder="Enter new password"
                   />
+
+                  {/* Password Strength Indicator */}
+                  {formData.newPassword && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium text-stone-600">Password Strength:</span>
+                        <span className={`text-sm font-medium px-2 py-1 rounded ${
+                          passwordStrength <= 2 ? 'bg-red-100 text-red-600' : 
+                          passwordStrength <= 3 ? 'bg-yellow-100 text-yellow-600' : 
+                          passwordStrength <= 4 ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        }`}>
+                          {passwordStrength <= 2 ? 'Weak' : 
+                           passwordStrength <= 3 ? 'Fair' : 
+                           passwordStrength <= 4 ? 'Good' : 'Strong'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-stone-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            passwordStrength <= 2 ? 'bg-red-500' : 
+                            passwordStrength <= 3 ? 'bg-yellow-500' : 
+                            passwordStrength <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Password Validation Messages */}
+                  {formData.newPassword && Object.keys(passwordErrors).length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {Object.entries(passwordErrors).map(([key, message]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          {message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                   <Input
                     label="Confirm New Password"

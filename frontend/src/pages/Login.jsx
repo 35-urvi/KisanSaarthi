@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { useNavigate } from "react-router-dom";
 import {
@@ -186,16 +187,18 @@ const Login = () => {
         if (data.user && data.user.name) {
           localStorage.setItem("userName", data.user.name)
         }
-        alert("Login successful! Welcome back to KisanSaarthi!");
+        toast.success("Login successful! Welcome back to KisanSaarthi!");
         // optionally save user info to localStorage
         // localStorage.setItem("user", JSON.stringify(data.user));
         navigate("/dashboard");
       } else {
         setErrors(prev => ({ ...prev, password: data.error || "Login failed" }));
+        toast.error(data.error || 'Login failed')
       }
     } catch (err) {
       setLoading(false);
       setErrors(prev => ({ ...prev, password: "Server error, please try again" }));
+      toast.error('Server error, please try again')
     }
   }
 };

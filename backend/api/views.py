@@ -1,6 +1,9 @@
 import json
 import os
 import random
+import base64
+import time
+import tempfile
 import requests
 from datetime import datetime, timedelta, timezone
 from django.http import JsonResponse
@@ -14,11 +17,12 @@ from rest_framework.response import Response
 from .ml.fertilizer_model import predict_from_payload
 from .ml.crop_model import predict_crop_from_payload
 from bs4 import BeautifulSoup
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 
@@ -643,15 +647,30 @@ def train_yield_model(request):
 def predict_yield_endpoint(request):
     try:
         payload = request.data if hasattr(request, 'data') else json.loads(request.body or "{}")
-        crop = payload.get('cropName') or payload.get('crop')
-        season = payload.get('season')
-        year = int(payload.get('year'))
-        area = float(payload.get('area'))
-        if not all([crop, season, year, area]):
-            return Response({"error": "Missing required fields"}, status=400)
+        crop_raw = payload.get('cropName') or payload.get('crop')
+        season_raw = payload.get('season')
+        year_raw = payload.get('year')
+        area_raw = payload.get('area')
 
-        from .ml.yield_model import predict_yield
-        result = predict_yield(crop=crop, season=season, year=year, area=area)
+        if crop_raw is None or season_raw is None or year_raw is None or area_raw is None:
+            return Response({"error": "Missing required fields: cropName, season, year, area"}, status=400)
+
+        try:
+            crop = str(crop_raw)
+            season = str(season_raw)
+            year = int(year_raw)
+            area = float(area_raw)
+        except Exception:
+            return Response({"error": "Invalid data types for fields"}, status=400)
+
+        if area <= 0:
+            return Response({"error": "Area must be > 0"}, status=400)
+
+        try:
+            from .ml.yield_model import predict_yield
+            result = predict_yield(crop=crop, season=season, year=year, area=area)
+        except FileNotFoundError as fnf:
+            return Response({"error": str(fnf), "code": "MODEL_NOT_TRAINED"}, status=503)
         # attach a simple confidence proxy from model variance isn't available -> use heuristic
         result.update({
             'confidence': 90
@@ -659,3 +678,107 @@ def predict_yield_endpoint(request):
         return Response(result)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
+
+
+
+# HF_SPACE_BASE = "https://urvi-35-plant-disease-detector.hf.space"
+
+# @api_view(["POST"])
+# @parser_classes([MultiPartParser, FormParser])
+# def analyze_disease(request):
+#     if "file" not in request.FILES:
+#         return Response({"error": "No file uploaded"}, status=400)
+
+#     file = request.FILES["file"]
+
+#     # Save file temporarily
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[-1]) as tmp:
+#         for chunk in file.chunks():
+#             tmp.write(chunk)
+#         temp_path = tmp.name
+
+#     try:
+#         # Step 1: Send request to HuggingFace Space
+#         predict_url = f"{HF_SPACE_BASE}/gradio_api/call/predict"
+
+#         payload = {
+#             "data": [
+#                 {
+#                     "path": temp_path, 
+#                     "orig_name": file.name,
+#                     "meta": {"_type": "gradio.FileData"}
+#                 }
+#             ]
+#         }
+
+#         response = requests.post(predict_url, json=payload)
+
+#         print("🔥 Raw HF Response:", response.text)
+
+#         if response.status_code != 200:
+#             return Response({"error": "HF request failed", "raw": response.text}, status=500)
+
+#         result_json = response.json()
+
+#         # Hugging Face first returns {"event_id": "..."}
+#         if "event_id" in result_json:
+#             event_id = result_json["event_id"]
+
+#             # Step 2: Stream results
+#             stream_url = f"{HF_SPACE_BASE}/gradio_api/call/predict/{event_id}"
+#             stream_resp = requests.get(stream_url, stream=True)
+
+#             final_data = None
+#             for line in stream_resp.iter_lines():
+#                 if line:
+#                     decoded = line.decode("utf-8")
+#                     if decoded.startswith("data: "):
+#                         try:
+#                             final_data = decoded.replace("data: ", "")
+#                         except:
+#                             pass
+
+#             return Response({"prediction": final_data})
+
+#         return Response(result_json)
+
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=500)
+#     finally:
+#         if os.path.exists(temp_path):
+#             os.remove(temp_path)
+
+HF_API_URL = "https://api-inference.huggingface.co/models/urvi-35/plant-disease-detector"
+HF_TOKEN = "your_hf_token_here"  # set in env for security
+
+headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser, FormParser])
+def analyze_disease(request):
+    if "file" not in request.FILES:
+        return Response({"error": "No file uploaded"}, status=400)
+
+    file = request.FILES["file"]
+
+    try:
+        # Send to HF Inference API
+        response = requests.post(
+            HF_API_URL,
+            headers=headers,
+            files={"file": (file.name, file.read(), file.content_type)}
+        )
+
+        if response.status_code != 200:
+            return Response({"error": "HF request failed", "raw": response.text}, status=500)
+
+        result = response.json()
+        print("🌱 HF Response:", result)
+
+        # Adapt this based on your model’s return format
+        prediction = result[0]["label"] if isinstance(result, list) else str(result)
+
+        return Response({"prediction": prediction})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

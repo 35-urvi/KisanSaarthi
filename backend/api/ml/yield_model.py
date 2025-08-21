@@ -25,6 +25,7 @@ def _standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     rename_map = {
         'state_name': 'state',
         'district_name': 'district',
+        'crop_year': 'year',
     }
     df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
     return df
@@ -33,13 +34,13 @@ def _standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
 def _clean_and_engineer(df: pd.DataFrame) -> pd.DataFrame:
     df = _standardize_columns(df)
 
-    # Ensure required columns exist
+    # Ensure required columns exist (allow common variants)
     required_cols = []
-    # Production & Area columns can have different cases
+    # Production & Area columns can have different cases / underscores
     prod_col = 'production' if 'production' in df.columns else None
     area_col = 'area' if 'area' in df.columns else None
     crop_col = 'crop' if 'crop' in df.columns else None
-    season_col = 'season' if 'season' in df.columns else None
+    season_col = 'season' if 'season' in df.columns else ('whole_year' if 'whole_year' in df.columns else None)
     year_col = 'year' if 'year' in df.columns else None
 
     for name, col in [('production', prod_col), ('area', area_col), ('crop', crop_col), ('season', season_col), ('year', year_col)]:
@@ -79,7 +80,7 @@ def _build_pipeline() -> Pipeline:
     )
 
     model = RandomForestRegressor(
-        n_estimators=300,
+        n_estimators=120,
         max_depth=None,
         min_samples_split=4,
         min_samples_leaf=2,
@@ -104,6 +105,11 @@ def train_and_save(force: bool = False) -> dict:
     df = pd.read_csv(DATA_PATH)
     df_clean = _clean_and_engineer(df)
 
+    # Downsample very large datasets to keep initial training responsive
+    max_rows = 80000
+    if len(df_clean) > max_rows:
+        df_clean = df_clean.sample(n=max_rows, random_state=42).reset_index(drop=True)
+
     X = df_clean[[*CATEGORICAL_FEATURES, *NUMERIC_FEATURES]]
     y = df_clean[TARGET_COLUMN]
 
@@ -127,7 +133,9 @@ def train_and_save(force: bool = False) -> dict:
 
 def _load_artifacts():
     if not MODEL_PATH.exists():
-        train_and_save(force=True)
+        raise FileNotFoundError(
+            f"Yield model not found at {MODEL_PATH}. Train it first via POST /api/yield/train/."
+        )
     bundle = joblib.load(MODEL_PATH)
     return bundle['pipeline'], bundle['metadata']
 

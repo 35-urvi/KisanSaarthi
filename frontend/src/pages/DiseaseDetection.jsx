@@ -84,46 +84,91 @@ const DiseaseDetection = () => {
   }
 
   // Simulate disease detection API call
+  // const analyzeImage = async () => {
+  //   setIsAnalyzing(true)
+    
+  //   // Simulate API delay
+  //   await new Promise(resolve => setTimeout(resolve, 3000))
+    
+  //   // Mock response - in real implementation, this would come from your API
+  //   const mockResults = [
+  //     {
+  //       disease: "Healthy",
+  //       confidence: 95,
+  //       description: "Your crop appears to be healthy with no signs of disease detected.",
+  //       treatment: "Continue with regular care and monitoring. Maintain proper watering and nutrition.",
+  //       severity: "none",
+  //       color: "emerald"
+  //     },
+  //     {
+  //       disease: "Late Blight",
+  //       confidence: 87,
+  //       description: "Late blight is a serious disease that affects potatoes and tomatoes, causing dark lesions on leaves and stems.",
+  //       treatment: "Apply copper-based fungicides immediately. Remove affected plant parts and improve air circulation.",
+  //       severity: "high",
+  //       color: "red"
+  //     },
+  //     {
+  //       disease: "Leaf Spot",
+  //       confidence: 92,
+  //       description: "Leaf spot diseases cause circular or angular spots on leaves, often with a brown or black center.",
+  //       treatment: "Remove infected leaves, apply fungicide spray, and avoid overhead watering to prevent spread.",
+  //       severity: "medium",
+  //       color: "amber"
+  //     }
+  //   ]
+    
+  //   // Randomly select a result for demo
+  //   const result = mockResults[Math.floor(Math.random() * mockResults.length)]
+    
+  //   setAnalysisResult(result)
+  //   setIsAnalyzing(false)
+  // }
   const analyzeImage = async () => {
-    setIsAnalyzing(true)
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    // Mock response - in real implementation, this would come from your API
-    const mockResults = [
-      {
-        disease: "Healthy",
-        confidence: 95,
-        description: "Your crop appears to be healthy with no signs of disease detected.",
-        treatment: "Continue with regular care and monitoring. Maintain proper watering and nutrition.",
-        severity: "none",
-        color: "emerald"
-      },
-      {
-        disease: "Late Blight",
-        confidence: 87,
-        description: "Late blight is a serious disease that affects potatoes and tomatoes, causing dark lesions on leaves and stems.",
-        treatment: "Apply copper-based fungicides immediately. Remove affected plant parts and improve air circulation.",
-        severity: "high",
-        color: "red"
-      },
-      {
-        disease: "Leaf Spot",
-        confidence: 92,
-        description: "Leaf spot diseases cause circular or angular spots on leaves, often with a brown or black center.",
-        treatment: "Remove infected leaves, apply fungicide spray, and avoid overhead watering to prevent spread.",
-        severity: "medium",
-        color: "amber"
-      }
-    ]
-    
-    // Randomly select a result for demo
-    const result = mockResults[Math.floor(Math.random() * mockResults.length)]
-    
-    setAnalysisResult(result)
-    setIsAnalyzing(false)
+  if (!selectedImage) return;
+  setIsAnalyzing(true);
+
+  const formData = new FormData();
+  formData.append("file", selectedImage);
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/disease/analyze/", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    console.log("API Response:", data);
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    const prediction = data.prediction || "Unknown";
+
+    setAnalysisResult({
+      disease: prediction,
+      confidence: 95, // placeholder until backend returns real score
+      description: `Detected condition: ${prediction}`,
+      treatment: "Consult agricultural guidelines for treatment steps.",
+      severity: prediction.toLowerCase().includes("healthy") ? "none" : "medium",
+      color: prediction.toLowerCase().includes("healthy") ? "emerald" : "amber",
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    setAnalysisResult({
+      disease: "Error",
+      confidence: 0,
+      description: "Could not process the image.",
+      treatment: "Try again with a different image.",
+      severity: "high",
+      color: "red",
+    });
+  } finally {
+    setIsAnalyzing(false);
   }
+};
+
 
   // Clear all data
   const clearAll = () => {
@@ -368,7 +413,7 @@ const DiseaseDetection = () => {
                     className="space-y-4 h-full flex flex-col"
                   >
                     {/* Disease Status */}
-                    <div className={`p-4 rounded-xl border-2 ${
+                    <div className={`p-4 rounded-xl border-2 h-20 ${
                       analysisResult.severity === 'none' ? 'bg-emerald-50 border-emerald-200' :
                       analysisResult.severity === 'medium' ? 'bg-amber-50 border-amber-200' :
                       'bg-red-50 border-red-200'
@@ -394,13 +439,13 @@ const DiseaseDetection = () => {
                     </div>
 
                     {/* Treatment Recommendation */}
-                    <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl flex-1">
+                    {/* <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl flex-1">
                       <h4 className="text-md font-semibold text-stone-800 mb-2 flex items-center gap-2">
                         <Info className="w-4 h-4 text-blue-600" />
                         Recommended Treatment
                       </h4>
                       <p className="text-stone-600 text-sm leading-relaxed">{analysisResult.treatment}</p>
-                    </div>
+                    </div> */}
 
                     {/* Action Buttons */}
                     <div className="space-y-2">
@@ -412,13 +457,13 @@ const DiseaseDetection = () => {
                       >
                         Analyze Another Image
                       </motion.button>
-                      <motion.button
+                      {/* <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full border-2 border-stone-300 text-stone-700 py-2 px-4 rounded-lg font-medium hover:bg-stone-50 transition-all duration-300 text-sm"
                       >
                         Save Results
-                      </motion.button>
+                      </motion.button> */}
                     </div>
                   </motion.div>
                 )}

@@ -30,7 +30,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: "Weather", icon: <CloudRain className="w-5 h-5" />, path: "/weather" },
     // { name: "Marketplace", icon: <ShoppingCart className="w-5 h-5" />, path: "/marketplace" },
     { name: "Gov. Schema", icon: <Layers className="w-5 h-5" />, path: "/gov-schema" },
-    { name: "Community Forum", icon: <MessageCircle className="w-5 h-5" />, path: "/community-forum" },
+    // { name: "Community Forum", icon: <MessageCircle className="w-5 h-5" />, path: "/community-forum" },
     { name: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" }
   ]
 
