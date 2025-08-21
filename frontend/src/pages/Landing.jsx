@@ -18,6 +18,7 @@ import {
   Menu,
   X,
 } from "lucide-react"
+import img1 from '../assets/img1.jpg'
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -58,34 +59,11 @@ const Landing = () => {
   const navItems = [
     { name: "Home", href: "#home" },
     { name: "Journey", href: "#journey" },
-    { name: "Weather", href: "#weather" },
     { name: "Features", href: "#features" },
-    { name: "Testimonials", href: "#testimonials" },
     { name: "Contact", href: "#contact" },
   ]
 
-  // Testimonials data
-  const testimonials = [
-    {
-      name: "राम प्रसाद शर्मा",
-      location: "उत्तर प्रदेश",
-      text: "KisanSaarthi ने मेरी फसल की पैदावार 30% बढ़ा दी है। मौसम की जानकारी और बीमारी की पहचान बहुत सटीक है।",
-      rating: 5,
-    },
-    {
-      name: "सुनीता देवी",
-      location: "पंजाब",
-      text: "इस ऐप से मुझे सही समय पर बुवाई और कटाई की जानकारी मिलती है। बहुत उपयोगी है।",
-      rating: 5,
-    },
-    {
-      name: "मोहन सिंह",
-      location: "हरियाणा",
-      text: "AI की मदद से अब मैं अपनी फसल की बेहतर देखभाल कर पा रहा हूं। धन्यवाद KisanSaarthi!",
-      rating: 5,
-    },
-  ]
-
+  
   // Features data with harmonious colors
   const features = [
     {
@@ -114,8 +92,8 @@ const Landing = () => {
     },
     {
       icon: <MessageCircle className="w-8 h-8" />,
-      title: "Q&A Forum",
-      description: "Connect with experts and fellow farmers for knowledge sharing",
+      title: "Gov. Schemes",
+      description: "Direct connect to goverment scheme portal",
       color: "from-orange-500 to-orange-600",
       bgColor: "bg-orange-50",
       borderColor: "border-orange-200",
@@ -125,18 +103,11 @@ const Landing = () => {
   // Growth stages data
   const growthStages = [
     { stage: "Planning", icon: "🌱", description: "Smart crop selection and planning" },
-    { stage: "Monitoring", icon: "🌿", description: "Real-time crop health monitoring" },
+    { stage: "Fertilizer", icon: "🌿", description: "predict fertilizer for your crop" },
     { stage: "Alerts", icon: "⚠️", description: "Weather and disease alerts" },
-    { stage: "Harvest", icon: "🌾", description: "Optimal harvest timing" },
+    { stage: "Yield", icon: "🌾", description: "predict your crop's yield" },
   ]
 
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
 
   // Scroll to section function
   const scrollToSection = (sectionId) => {
@@ -152,26 +123,33 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 px-3">
               <Sprout className="w-8 h-8 text-emerald-600" />
               <span className="text-xl font-bold text-emerald-800">KisanSaarthi</span>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {navItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => scrollToSection(item.href)}
-                  className="text-stone-700 hover:text-emerald-600 font-medium transition-colors duration-200"
-                >
-                  {item.name}
-                </button>
-              ))}
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full font-semibold transition-colors duration-200" onClick={() => navigate("/login")}>
-                Login
+            <div className="hidden md:flex">
+            <div className=" items-center space-x-8 py-2 absolute left-1/2 transform -translate-x-1/2">
+            {navItems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => scrollToSection(item.href)}
+                className="text-stone-700 hover:text-emerald-600 font-medium transition-colors duration-200"
+              >
+                {item.name}
               </button>
+            ))}
+
             </div>
+            <button
+            className="bg-emerald-600 hover:bg-emerald-700 text-white mx-3 px-6 py-2 rounded-full font-semibold transition-colors duration-200"
+            onClick={() => navigate("/login")}
+            >
+              Login
+            </button>
+            </div>
+            
 
             {/* Mobile Menu Button */}
             <button
@@ -199,8 +177,8 @@ const Landing = () => {
                   {item.name}
                 </button>
               ))}
-              <button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full font-semibold transition-colors duration-200">
-                Download App
+              <button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full font-semibold transition-colors duration-200" onClick={() => navigate("/login")}>
+                Login
               </button>
             </motion.div>
           )}
@@ -217,7 +195,7 @@ const Landing = () => {
             <div
               className="w-full h-full bg-cover bg-center"
               style={{
-                backgroundImage: `url('/placeholder.svg?height=1080&width=1920')`,
+                backgroundImage: `url(${img1})`,
               }}
             />
           </motion.div>
@@ -264,7 +242,7 @@ const Landing = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => scrollToSection("#features")}
+            onClick={() => navigate("/login")}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl transition-all duration-300 flex items-center gap-2 mx-auto border-2 border-emerald-500"
           >
             Get Started <ArrowRight className="w-5 h-5" />
@@ -332,48 +310,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Weather Widget Section */}
-      <section
-        id="weather"
-        className="min-h-screen flex items-center py-20 bg-gradient-to-r from-teal-50 to-emerald-50"
-      >
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-4xl mx-auto"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-center text-teal-800 mb-12">
-              Real-Time Weather Updates
-            </h2>
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-teal-100">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <Sun className="w-12 h-12 text-amber-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-stone-800">28°C</p>
-                  <p className="text-stone-600">Sunny</p>
-                </div>
-                <div className="text-center">
-                  <Thermometer className="w-12 h-12 text-orange-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-stone-800">32°C</p>
-                  <p className="text-stone-600">Max Temp</p>
-                </div>
-                <div className="text-center">
-                  <Droplets className="w-12 h-12 text-teal-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-stone-800">65%</p>
-                  <p className="text-stone-600">Humidity</p>
-                </div>
-                <div className="text-center">
-                  <Wind className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-stone-800">12 km/h</p>
-                  <p className="text-stone-600">Wind Speed</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section
@@ -421,64 +357,16 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section
-        id="testimonials"
-        className="min-h-screen flex items-center py-20 bg-gradient-to-r from-emerald-600 to-teal-600"
-      >
-        <div className="container mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-bold text-stone-50 text-center mb-16"
-          >
-            What Farmers Say About Us
-          </motion.h2>
-
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              key={currentTestimonial}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.5 }}
-              className="bg-stone-50 rounded-2xl shadow-xl p-8 text-center border border-emerald-200"
-            >
-              <div className="flex justify-center mb-4">
-                {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
-                  <Star key={i} className="w-6 h-6 text-amber-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-lg text-stone-700 mb-6 italic">"{testimonials[currentTestimonial].text}"</p>
-              <div>
-                <h4 className="text-xl font-semibold text-emerald-800">{testimonials[currentTestimonial].name}</h4>
-                <p className="text-teal-600">{testimonials[currentTestimonial].location}</p>
-              </div>
-            </motion.div>
-
-            {/* Testimonial indicators */}
-            <div className="flex justify-center mt-8 space-x-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentTestimonial(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentTestimonial ? "bg-stone-100" : "bg-stone-100/50"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       {/* Footer */}
-      <footer id="contact" className="bg-stone-800 text-stone-100 py-16">
+      <footer id="contact" className="bg-stone-800 text-stone-100 py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4 text-emerald-400">KisanSaarthi</h3>
+              <h3 className="text-2xl font-bold mb-4 text-emerald-400 flex">
+              <Sprout className="w-8 h-8 text-emerald-600" />
+              <span className="text-xl font-bold text-emerald-400">KisanSaarthi</span>
+              </h3>
               <p className="text-stone-300 mb-4">
                 Empowering farmers with AI-powered solutions for sustainable agriculture.
               </p>
@@ -510,34 +398,25 @@ const Landing = () => {
                 <li className="hover:text-emerald-400 transition-colors cursor-pointer">Crop Planning</li>
                 <li className="hover:text-emerald-400 transition-colors cursor-pointer">Disease Detection</li>
                 <li className="hover:text-emerald-400 transition-colors cursor-pointer">Weather Alerts</li>
-                <li className="hover:text-emerald-400 transition-colors cursor-pointer">Expert Forum</li>
+                <li className="hover:text-emerald-400 transition-colors cursor-pointer">Yield Prediction</li>
               </ul>
             </div>
 
-            <div>
-              <h4 className="text-lg font-semibold mb-4 text-emerald-400">Support</h4>
-              <ul className="space-y-2 text-stone-300">
-                <li className="hover:text-emerald-400 transition-colors cursor-pointer">Help Center</li>
-                <li className="hover:text-emerald-400 transition-colors cursor-pointer">User Guide</li>
-                <li className="hover:text-emerald-400 transition-colors cursor-pointer">Community</li>
-                <li className="hover:text-emerald-400 transition-colors cursor-pointer">Contact Us</li>
-              </ul>
-            </div>
-
+    
             <div>
               <h4 className="text-lg font-semibold mb-4 text-emerald-400">Contact</h4>
               <div className="space-y-3 text-stone-300">
                 <div className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                   <Phone className="w-4 h-4" />
-                  <span>+91 98765 43210</span>
+                  <span>+91 98989 10101</span>
                 </div>
                 <div className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                   <Mail className="w-4 h-4" />
-                  <span>support@kisansaarthi.com</span>
+                  <span>@kisansaarthi.com</span>
                 </div>
                 <div className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                   <MapPin className="w-4 h-4" />
-                  <span>New Delhi, India</span>
+                  <span>Gujarat, India</span>
                 </div>
               </div>
             </div>

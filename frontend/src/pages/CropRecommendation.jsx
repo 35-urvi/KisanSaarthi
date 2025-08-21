@@ -213,13 +213,6 @@ const CropRecommendation = () => {
                 </h1>
                 <p className="text-emerald-100 text-lg">Get AI-powered crop suggestions based on your soil and environmental conditions</p>
               </div>
-              <div className="mt-4 md:mt-0 text-right">
-                <p className="text-emerald-100">Analysis Status</p>
-                <p className="text-xl font-semibold flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Ready to Analyze
-                </p>
-              </div>
             </div>
           </motion.div>
 
@@ -376,12 +369,12 @@ const CropRecommendation = () => {
                         <h4 className="text-4xl font-bold text-stone-800 mb-4">
                           {recommendation.crop}
                         </h4>
-                        {/* <div className="flex items-center justify-center gap-2 mb-4">
+                        <div className="flex items-center justify-center gap-2 mb-4">
                           <CheckCircle className="w-6 h-6 text-emerald-600" />
                           <span className="text-emerald-700 font-semibold text-lg">
                             {recommendation.confidence}% Confidence
                           </span>
-                        </div> */}
+                        </div>
                         <div className="w-full bg-emerald-200 rounded-full h-3 mb-6">
                           <div 
                             className="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full transition-all duration-1000" 

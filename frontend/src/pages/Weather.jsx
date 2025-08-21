@@ -46,17 +46,6 @@ const Weather = () => {
     icon: "sunny"
   })
 
-  // 7-day forecast data
-  // const [forecast] = useState([
-  //   { day: "Today", high: 32, low: 22, condition: "Sunny", icon: "sunny", precipitation: 0 },
-  //   { day: "Tomorrow", high: 30, low: 20, condition: "Partly Cloudy", icon: "partly-cloudy", precipitation: 10 },
-  //   { day: "Wed", high: 28, low: 18, condition: "Rainy", icon: "rainy", precipitation: 80 },
-  //   { day: "Thu", high: 26, low: 16, condition: "Cloudy", icon: "cloudy", precipitation: 30 },
-  //   { day: "Fri", high: 29, low: 19, condition: "Sunny", icon: "sunny", precipitation: 5 },
-  //   { day: "Sat", high: 31, low: 21, condition: "Partly Cloudy", icon: "partly-cloudy", precipitation: 15 },
-  //   { day: "Sun", high: 33, low: 23, condition: "Sunny", icon: "sunny", precipitation: 0 }
-  // ])
-
   // Weather alerts
   const [alerts] = useState([
     { type: "warning", title: "Heavy Rain Alert", message: "Heavy rainfall expected in next 6 hours", time: "2 hours ago" },
@@ -100,33 +89,6 @@ const Weather = () => {
     }
   }
 
-  // Get user's current location
-  // const getCurrentLocation = () => {
-  //   setLoading(true)
-  //   setError("")
-    
-  //   if (navigator.geolocation) {
-  //     navigator.geolocation.getCurrentPosition(
-  //       (position) => {
-  //         const { latitude, longitude } = position.coords
-  //         // Here you would call your weather API with coordinates
-  //         setCurrentLocation("Current Location")
-  //         setLoading(false)
-  //         // Simulate API call delay
-  //         setTimeout(() => {
-  //           setCurrentLocation("Ahmedabad, Gujarat")
-  //         }, 1000)
-  //       },
-  //       (error) => {
-  //         setError("Unable to get your location. Please search manually.")
-  //         setLoading(false)
-  //       }
-  //     )
-  //   } else {
-  //     setError("Geolocation is not supported by this browser.")
-  //     setLoading(false)
-  //   }
-  // }
   const getCurrentLocation = () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -158,24 +120,6 @@ const Weather = () => {
   }
 };
 
-  // Search weather by city
-  // const searchWeather = async () => {
-  //   if (!searchQuery.trim()) return
-    
-  //   setLoading(true)
-  //   setError("")
-    
-  //   try {
-  //     // Simulate API call
-  //     await new Promise(resolve => setTimeout(resolve, 1000))
-  //     setCurrentLocation(searchQuery)
-  //     setSearchQuery("")
-  //   } catch (err) {
-  //     setError("City not found. Please try again.")
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
   const searchWeather = async () => {
   if (!searchQuery.trim()) return;
   setLoading(true);
@@ -300,7 +244,7 @@ const Weather = () => {
                 transition={{ duration: 0.3 }}
                 className="p-2 rounded-full bg-white/20 hover:bg-white/30"
               >
-                <RefreshCw className="w-5 h-5" />
+                {/* <RefreshCw className="w-5 h-5" /> */}
               </motion.button>
             </div>
 
@@ -314,7 +258,6 @@ const Weather = () => {
                     <p className="text-xl text-grey-100">{currentWeather.condition}</p>
                   </div>
                 </div>
-                {/* <p className="text-grey-100 text-lg">Feels like {currentWeather.feelsLike}°C</p> */}
               </div>
 
               {/* Weather Details Grid */}
@@ -328,34 +271,6 @@ const Weather = () => {
                   <Wind className="w-6 h-6 mx-auto mb-2" />
                   <p className="text-2xl font-bold">{currentWeather.windSpeed}</p>
                   <p className="text-grey-100 text-sm">km/h</p>
-                </div>
-                {/* <div className="bg-white/10 rounded-xl p-4 text-center">
-                  <Eye className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-2xl font-bold">{currentWeather.city}</p>
-                  <p className="text-grey-100 text-sm">km</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-4 text-center">
-                  <Gauge className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-2xl font-bold">{currentWeather.pressure}</p>
-                  <p className="text-grey-100 text-sm">hPa</p>
-                </div> */}
-              </div>
-            </div>
-
-            {/* Sun Times */}
-            <div className="flex justify-center gap-8 mt-6 pt-6 border-t border-white/20">
-              <div className="flex items-center gap-2">
-                <Sunrise className="w-5 h-5 text-amber-300" />
-                <div>
-                  <p className="text-grey-100 text-sm">Sunrise</p>
-                  <p className="font-semibold">{currentWeather.sunrise}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sunset className="w-5 h-5 text-orange-300" />
-                <div>
-                  <p className="text-grey-100 text-sm">Sunset</p>
-                  <p className="font-semibold">{currentWeather.sunset}</p>
                 </div>
               </div>
             </div>
@@ -410,7 +325,7 @@ const Weather = () => {
           </motion.div>
 
           {/* Weather Alerts */}
-          {alerts.length > 0 && (
+          {/* {alerts.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -460,7 +375,7 @@ const Weather = () => {
                 ))}
               </div>
             </motion.div>
-          )}
+          )} */}
         </div>
       </main>
     </div>

@@ -263,17 +263,7 @@ const ForgotPassword = () => {
     }
   }
 
-  // const handleSendOTP = async () => {
-  //   if (validatePhone()) {
-  //     setLoading(true)
-  //     // Simulate OTP sending
-  //     await new Promise(resolve => setTimeout(resolve, 2000))
-  //     setOtpSent(true)
-  //     setShowOtpFields(true)
-  //     setCurrentStep(2)
-  //     setLoading(false)
-  //   }
-  // }
+  
   const handleSendOTP = async () => {
   if (validatePhone()) {
     setLoading(true)
@@ -299,15 +289,7 @@ const ForgotPassword = () => {
   }
 }
 
-  // const handleVerifyOTP = async () => {
-  //   if (validateOTP()) {
-  //     setLoading(true)
-  //     // Simulate OTP verification
-  //     await new Promise(resolve => setTimeout(resolve, 2000))
-  //     setCurrentStep(3)
-  //     setLoading(false)
-  //   }
-  // }
+  
   const handleVerifyOTP = async () => {
   if (validateOTP()) {
     setLoading(true)
@@ -349,17 +331,6 @@ const handleResendOTP = async () => {
   setLoading(false)
 }
 
-
-  // const handleResetPassword = async () => {
-  //   if (validatePasswords()) {
-  //     setLoading(true)
-  //     // Simulate password reset
-  //     await new Promise(resolve => setTimeout(resolve, 2000))
-  //     setLoading(false)
-  //     // Show success message
-  //     alert('Password reset successful! You can now login with your new password.')
-  //   }
-  // }
   const handleResetPassword = async () => {
   if (validatePasswords()) {
     setLoading(true)
@@ -402,7 +373,7 @@ const handleResendOTP = async () => {
     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-amber-500 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        {/* <motion.div
+        <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute top-10 right-10 w-32 h-32 bg-amber-400/20 rounded-full"
@@ -427,7 +398,7 @@ const handleResendOTP = async () => {
           className="absolute bottom-1/3 right-20 text-5xl opacity-25"
         >
           🌾
-        </motion.div> */}
+        </motion.div>
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
@@ -641,7 +612,7 @@ const handleResendOTP = async () => {
 
                   {/* Password Strength Indicator */}
                   {formData.newPassword && (
-                    <div className="mt-2">
+                    <div className="my-2">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-medium text-stone-600">Password Strength:</span>
                         <span className={`text-sm font-medium px-2 py-1 rounded ${
@@ -690,10 +661,7 @@ const handleResendOTP = async () => {
                     placeholder="Confirm new password"
                   />
                   
-                  <div className="flex items-center gap-2 text-sm text-stone-600 bg-blue-50 p-3 rounded-lg">
-                    <Shield className="h-4 w-4 text-blue-600" />
-                    <span>Password should be at least 6 characters long</span>
-                  </div>
+    
                 </motion.div>
               )}
             </AnimatePresence>

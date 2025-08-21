@@ -28,9 +28,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: "Disease Detection", icon: <Bug className="w-5 h-5" />, path: "/disease-detection" },
     { name: "Fertilizer Guide", icon: <Calendar className="w-5 h-5" />, path: "/fertilizer-guide" },
     { name: "Weather", icon: <CloudRain className="w-5 h-5" />, path: "/weather" },
-    // { name: "Marketplace", icon: <ShoppingCart className="w-5 h-5" />, path: "/marketplace" },
     { name: "Gov. Schema", icon: <Layers className="w-5 h-5" />, path: "/gov-schema" },
-    // { name: "Community Forum", icon: <MessageCircle className="w-5 h-5" />, path: "/community-forum" },
     { name: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" }
   ]
 

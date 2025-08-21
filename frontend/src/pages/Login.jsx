@@ -154,16 +154,6 @@ const Login = () => {
     }
   }
 
-  // const handleLogin = async () => {
-  //   if (validateLogin()) {
-  //     setLoading(true)
-  //     // Simulate API call
-  //     await new Promise(resolve => setTimeout(resolve, 2000))
-  //     setLoading(false)
-  //     // Handle successful login here
-  //     alert('Login successful! Welcome back to KisanSaarthi!')
-  //   }
-  // }
   const handleLogin = async () => {
   if (validateLogin()) {
     setLoading(true);
@@ -202,20 +192,6 @@ const Login = () => {
     }
   }
 };
-
-
-  // const handleForgotPasswordClick = () => {
-  //   // Pass the current phone number to forgot password page if available
-  //   if (onForgotPassword) {
-  //     onForgotPassword(formData.phone)
-  //   }
-  // }
-
-  // const handleSignUpClick = () => {
-  //   if (onSignUp) {
-  //     onSignUp()
-  //   }
-  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-amber-500 relative overflow-hidden">
@@ -290,16 +266,6 @@ const Login = () => {
             
             {/* Remember Me and Forgot Password */}
             <div className="flex items-center justify-between">
-              {/* <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.rememberMe}
-                  onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 border-stone-300 rounded focus:ring-emerald-500 focus:ring-2"
-                />
-                <span className="text-sm text-stone-600">Remember me</span>
-              </label> */}
-              
               <button
                 type="button"
                 onClick={() => navigate("/forgotpassword")}
@@ -327,14 +293,6 @@ const Login = () => {
             </motion.button>
           </div>
 
-          {/* Additional Info */}
-          {/* <div className="mt-6">
-            <div className="flex items-center gap-2 text-xs text-stone-500 bg-emerald-50 p-3 rounded-lg">
-              <Shield className="h-4 w-4 text-emerald-600" />
-              <span>Your data is secure and encrypted</span>
-            </div>
-          </div> */}
-
           {/* Sign Up Link */}
           <div className="text-center mt-6 pt-6 border-t border-stone-200">
             <p className="text-sm text-stone-600">
@@ -350,12 +308,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* App Info */}
-          {/* <div className="text-center mt-4">
-            <p className="text-xs text-stone-500">
-              Empowering farmers with technology and knowledge
-            </p>
-          </div> */}
         </Card>
       </div>
     </div>

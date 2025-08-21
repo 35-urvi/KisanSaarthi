@@ -17,6 +17,7 @@ import {
   Shield
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import indiaData from "../assets/location.json";
 
 // Reusable Components
 const Input = ({ 
@@ -304,38 +305,21 @@ const Signup = () => {
   const [gpsLoading, setGpsLoading] = useState(false)
   const [locationPermission, setLocationPermission] = useState('prompt')
 
-  // Sample data
-  const states = [
-    {valuse:'gujarat',label:'Gujarat'},
-    { value: 'up', label: 'Uttar Pradesh' },
-    { value: 'punjab', label: 'Punjab' },
-    { value: 'haryana', label: 'Haryana' },
-    // { value: 'rajasthan', label: 'Rajasthan' },
-    // { value: 'mp', label: 'Madhya Pradesh' }
-  ]
+  // All states
+const states = Object.keys(indiaData).map(s => ({ value: s, label: s }));
 
-  const districts = {
-    gujarat: [
-      { value: 'ahmedabad', label: 'Ahmedabad' },
-      { value: 'surat', label: 'Surat' },
-      { value: 'baroda', label: 'Baroda' }
-    ],
-    up: [
-      { value: 'lucknow', label: 'Lucknow' },
-      { value: 'kanpur', label: 'Kanpur' },
-      { value: 'agra', label: 'Agra' }
-    ],
-    punjab: [
-      { value: 'ludhiana', label: 'Ludhiana' },
-      { value: 'amritsar', label: 'Amritsar' },
-      { value: 'jalandhar', label: 'Jalandhar' }
-    ],
-    haryana: [
-      { value: 'gurgaon', label: 'Gurgaon' },
-      { value: 'faridabad', label: 'Faridabad' },
-      { value: 'panipat', label: 'Panipat' }
-    ]
-  }
+// Districts of the selected state
+const districts =
+  formData.state && indiaData[formData.state]
+    ? Object.keys(indiaData[formData.state]).map(d => ({ value: d, label: d }))
+    : [];
+
+// Villages of the selected district
+const villages =
+  formData.state && formData.district && indiaData[formData.state][formData.district]
+    ? indiaData[formData.state][formData.district].map(v => ({ value: v, label: v }))
+    : [];
+
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -345,64 +329,7 @@ const Signup = () => {
     return () => clearInterval(interval)
   }, [resendSeconds])
 
-  const villages = {
-    ahmedabad: [
-      { value: 'viramgam', label: 'viramgam' },
-      { value: 'kalol', label: 'kalol' },
-      { value: 'mandal', label: 'mandal' }
-    ],
-    surat:[
-
-    ],
-    baroda:[
-
-    ],
-    lucknow: [
-      { value: 'malihabad', label: 'Malihabad' },
-      { value: 'bakshi-ka-talab', label: 'Bakshi Ka Talab' },
-      { value: 'mohanlalganj', label: 'Mohanlalganj' }
-    ],
-    kanpur: [
-      { value: 'bilhaur', label: 'Bilhaur' },
-      { value: 'ghatampur', label: 'Ghatampur' },
-      { value: 'derapur', label: 'Derapur' }
-    ],
-    agra: [
-      { value: 'fatehabad', label: 'Fatehabad' },
-      { value: 'kheragarh', label: 'Kheragarh' },
-      { value: 'bah', label: 'Bah' }
-    ],
-    ludhiana: [
-      { value: 'doraha', label: 'Doraha' },
-      { value: 'khanna', label: 'Khanna' },
-      { value: 'payal', label: 'Payal' }
-    ],
-    amritsar: [
-      { value: 'tarn-taran', label: 'Tarn Taran' },
-      { value: 'jandiala', label: 'Jandiala Guru' },
-      { value: 'rayya', label: 'Rayya' }
-    ],
-    jalandhar: [
-      { value: 'nakodar', label: 'Nakodar' },
-      { value: 'phillaur', label: 'Phillaur' },
-      { value: 'adampur', label: 'Adampur' }
-    ],
-    gurgaon: [
-      { value: 'sohna', label: 'Sohna' },
-      { value: 'pataudi', label: 'Pataudi' },
-      { value: 'farukh-nagar', label: 'Farukh Nagar' }
-    ],
-    faridabad: [
-      { value: 'ballabgarh', label: 'Ballabgarh' },
-      { value: 'tigaon', label: 'Tigaon' },
-      { value: 'palwal', label: 'Palwal' }
-    ],
-    panipat: [
-      { value: 'samalkha', label: 'Samalkha' },
-      { value: 'israna', label: 'Israna' },
-      { value: 'bapoli', label: 'Bapoli' }
-    ]
-  }
+  
 
   // Validation functions
   const validateStep1 = () => {
@@ -522,78 +449,7 @@ const Signup = () => {
   }
 
   // GPS Location Functions
-  const getCurrentLocation = () => {
-    setGpsLoading(true)
-    
-    if (!navigator.geolocation) {
-      setErrors(prev => ({ ...prev, gps: 'Geolocation is not supported by this browser' }))
-      setGpsLoading(false)
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
-        handleInputChange('latitude', latitude.toFixed(6))
-        handleInputChange('longitude', longitude.toFixed(6))
-        
-        // Try to get location details from reverse geocoding
-        try {
-          await reverseGeocode(latitude, longitude)
-          setLocationPermission('granted')
-        } catch (error) {
-          console.log('Reverse geocoding failed:', error)
-        }
-        
-        setGpsLoading(false)
-      },
-      (error) => {
-        let errorMessage = 'Unable to retrieve location'
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user'
-            setLocationPermission('denied')
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable'
-            break
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out'
-            break
-        }
-        setErrors(prev => ({ ...prev, gps: errorMessage }))
-        setGpsLoading(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    )
-  }
-
-  const reverseGeocode = async (lat, lng) => {
-    // This is a mock implementation. In a real app, you'd use a service like:
-    // - Google Maps Geocoding API
-    // - OpenStreetMap Nominatim
-    // - MapBox Geocoding API
-    
-    // For demo purposes, we'll simulate the response
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Mock response - in reality, you'd parse the actual API response
-    const mockLocationData = {
-      state: 'up',
-      district: 'lucknow',
-      village: 'malihabad'
-    }
-    
-    // Auto-fill the form with the geocoded data
-    handleInputChange('state', mockLocationData.state)
-    handleInputChange('district', mockLocationData.district)
-    handleInputChange('village', mockLocationData.village)
-  }
-
+  
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return // Only allow digits
     
@@ -725,19 +581,6 @@ const handleVerifyOtp = async () => {
     toast.error("Something went wrong. Please try again.");
   }
 };
-
-
-  // const handleOTPSubmit = async () => {
-  //   if (validateOTP()) {
-  //     setLoading(true)
-  //     // Simulate OTP verification
-  //     await new Promise(resolve => setTimeout(resolve, 2000))
-  //     setLoading(false)
-  //     // Handle successful signup
-  //     alert('Signup successful! Welcome to KisanSaarthi!')
-  //   }
-  // }
-
   
 
   const stepVariants = {
@@ -849,103 +692,47 @@ const handleVerifyOtp = async () => {
                   transition={{ duration: 0.3 }}
                 >
                   <h3 className="text-lg font-semibold text-stone-700 mb-6">Location Information</h3>
-                  
-                  {/* GPS Auto-fill Section */}
-                  {/* <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-emerald-600" />
-                        <span className="font-medium text-emerald-800">Auto-detect Location</span>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={getCurrentLocation}
-                        disabled={gpsLoading}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 text-sm"
-                      >
-                        {gpsLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <MapPin className="h-4 w-4" />
-                        )}
-                        {gpsLoading ? 'Getting Location...' : 'Use My Location'}
-                      </motion.button>
-                    </div>
-                    <p className="text-sm text-emerald-700">
-                      Allow location access to automatically fill your address details
-                    </p>
-                    
-                    GPS Coordinates Display
-                    {formData.latitude && formData.longitude && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-3 p-2 bg-emerald-100 rounded-lg text-sm text-emerald-800"
-                      >
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Location detected: {formData.latitude}°N, {formData.longitude}°E</span>
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    GPS Error Display
-                    <AnimatePresence>
-                      {errors.gps && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="flex items-center gap-1 mt-3 text-red-600 text-sm"
-                        >
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.gps}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div> */}
-                  
                   <Select
                     label="State"
                     value={formData.state}
                     onChange={(e) => {
                       handleInputChange('state', e.target.value)
-                      handleInputChange('district', '') // Reset district when state changes
-                      handleInputChange('village', '') // Reset village when state changes
+                      handleInputChange('district', '') 
+                      handleInputChange('village', '') 
                     }}
                     options={states}
                     error={errors.state}
                     required
                   />
-                  
+
                   <Select
                     label="District"
                     value={formData.district}
                     onChange={(e) => {
                       handleInputChange('district', e.target.value)
-                      handleInputChange('village', '') // Reset village when district changes
+                      handleInputChange('village', '') 
                     }}
-                    options={districts[formData.state] || []}
+                    options={districts}
                     error={errors.district}
                     required
                     disabled={!formData.state}
                   />
-                  
+
                   <Select
                     label="Village/Town"
                     value={formData.village}
                     onChange={(e) => handleInputChange('village', e.target.value)}
-                    options={villages[formData.district] || []}
+                    options={villages}
                     error={errors.village}
                     required
                     disabled={!formData.district}
                   />
+
                   
-                  <div className="flex items-center gap-2 text-sm text-stone-600 bg-blue-50 p-3 rounded-lg">
+                  {/* <div className="flex items-center gap-2 text-sm text-stone-600 bg-blue-50 p-3 rounded-lg">
                     <MapPin className="h-4 w-4 text-blue-600" />
                     <span>Accurate location helps us provide weather updates, local farming tips, and connect you with nearby farmers</span>
-                  </div>
+                  </div> */}
                 </motion.div>
               )}
 
@@ -972,7 +759,7 @@ const handleVerifyOtp = async () => {
                   
                   {/* Password Strength Indicator */}
                   {formData.password && (
-                    <div className="mt-2">
+                    <div className="my-2">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-medium text-stone-600">Password Strength:</span>
                         <span className={`text-sm font-medium px-2 py-1 rounded ${

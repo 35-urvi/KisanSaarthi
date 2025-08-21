@@ -1,0 +1,47 @@
+{
+  "Andhra Pradesh": {
+    "Anantapur": ["Dharmavaram", "Hindupur", "Kadiri"],
+    "Chittoor": ["Tirupati", "Madanapalle", "Punganur"],
+    "Guntur": ["Tenali", "Mangalagiri", "Sattenapalle"]
+  },
+  "Arunachal Pradesh": {
+    "Papum Pare": ["Itanagar", "Naharlagun"],
+    "West Siang": ["Aalo", "Likabali"],
+    "East Siang": ["Pasighat", "Ruksin"]
+  },
+  "Assam": {
+    "Kamrup": ["Guwahati", "North Guwahati"],
+    "Dibrugarh": ["Dibrugarh", "Naharkatia"],
+    "Tinsukia": ["Tinsukia", "Digboi"]
+  },
+  "Bihar": {
+    "Patna": ["Patna City", "Masaurhi", "Bakhtiyarpur"],
+    "Gaya": ["Bodh Gaya", "Sherghati", "Tekari"],
+    "Muzaffarpur": ["Motipur", "Kanti", "Saraiya"]
+  },
+  "Gujarat": {
+    "Ahmedabad": ["Viramgam", "Kalol", "Mandal"],
+    "Surat": ["Bardoli", "Olpad", "Mandvi"],
+    "Vadodara": ["Padra", "Savli", "Karjan"]
+  },
+  "Maharashtra": {
+    "Mumbai": ["Dadar", "Andheri", "Borivali"],
+    "Pune": ["Shivajinagar", "Haveli", "Baramati"],
+    "Nagpur": ["Ramtek", "Umred", "Kalameshwar"]
+  },
+  "Tamil Nadu": {
+    "Chennai": ["Ambattur", "Guindy", "Velachery"],
+    "Coimbatore": ["Pollachi", "Mettupalayam", "Sulur"],
+    "Madurai": ["Thiruparankundram", "Melur", "Usilampatti"]
+  },
+  "Uttar Pradesh": {
+    "Lucknow": ["Malihabad", "Bakshi Ka Talab", "Mohanlalganj"],
+    "Kanpur": ["Bilhaur", "Ghatampur", "Derapur"],
+    "Agra": ["Fatehabad", "Kheragarh", "Bah"]
+  },
+  "West Bengal": {
+    "Kolkata": ["Salt Lake", "Howrah", "Ballygunge"],
+    "Darjeeling": ["Siliguri", "Mirik", "Kurseong"],
+    "Murshidabad": ["Berhampore", "Kandi", "Jangipur"]
+  }
+}

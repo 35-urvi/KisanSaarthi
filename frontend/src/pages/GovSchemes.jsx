@@ -526,7 +526,7 @@ const GovSchemes = () => {
                       <h3 className="text-lg font-semibold text-stone-800 mb-2 line-clamp-2">
                         {scheme.title}
                       </h3>
-                      <p className="text-stone-600 text-sm leading-relaxed">
+                      {/* <p className="text-stone-600 text-sm leading-relaxed">
                         {truncateText(scheme.shortDescription, 120)}
                         {scheme.shortDescription.length > 120 && (
                           <button
@@ -536,7 +536,7 @@ const GovSchemes = () => {
                             Read more
                           </button>
                         )}
-                      </p>
+                      </p> */}
                     </div>
 
                     {/* Department */}
@@ -552,8 +552,8 @@ const GovSchemes = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <motion.button
+                    <div className="flex gap-2 pt-2 justify-center">
+                      {/* <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedScheme(scheme)}
@@ -561,16 +561,17 @@ const GovSchemes = () => {
                       >
                         <Eye className="w-4 h-4" />
                         View Details
-                      </motion.button>
+                      </motion.button> */}
                       <motion.a
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         href={scheme.officialLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors"
+                        className="inline-flex gap-2 px-3 py-2 w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:bg-teal-200 transition-colors justify-center"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-5 h-5" />
+                         Visit Official Website                  
                       </motion.a>
                     </div>
                   </div>
