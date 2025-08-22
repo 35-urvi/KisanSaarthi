@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv 
 load_dotenv()
+from corsheaders.defaults import default_headers
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,6 +31,7 @@ DEBUG = os.getenv('DEBUG') == 'True'
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
+HF_API_TOKEN = os.getenv("HF_API_TOKEN") 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 
@@ -67,12 +70,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-CORS_ALLOW_CREDENTIALS = True
 
 # Keep default SameSite=Lax for local dev so cookies work across ports on the same site
 SESSION_COOKIE_SAMESITE = "Lax"
 
 ROOT_URLCONF = 'kisan_saarthi.urls'
+
+CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
 
 TEMPLATES = [
     {
@@ -160,7 +165,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",   # your React app URL (Vite default)
 ]
 
-CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
 
@@ -189,3 +193,10 @@ SIMPLE_JWT = {
 
     'JTI_CLAIM': 'jti',
 }
+
+CORS_ALLOW_HEADERS = list(default_headers) + ["withcredentials"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]

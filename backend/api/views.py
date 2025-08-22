@@ -6,7 +6,6 @@ import time
 import tempfile
 import requests
 from datetime import datetime, timedelta, timezone
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
@@ -23,6 +22,9 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.conf import settings
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 
 
 
@@ -680,105 +682,154 @@ def predict_yield_endpoint(request):
         return Response({"error": str(e)}, status=400)
 
 
+MODEL_ID = "wambugu71/crop_leaf_diseases_vit"
+HF_API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
 
-# HF_SPACE_BASE = "https://urvi-35-plant-disease-detector.hf.space"
+# Simple knowledge base for UI output (kept brief + generic)
+DISEASE_INFO = {
+    "Healthy": {
+        "severity": "none",
+        "description": "Leaf appears healthy. No visible disease symptoms.",
+        "treatment": "Continue routine care. Monitor regularly."
+    },
+    "Corn Common Rust": {
+        "severity": "medium",
+        "description": "Small orange-brown pustules on corn leaves.",
+        "treatment": "Use resistant varieties, consider fungicide at early stages, improve airflow."
+    },
+    "Corn Gray Leaf Spot": {
+        "severity": "medium",
+        "description": "Long rectangular gray lesions between veins.",
+        "treatment": "Crop residue management; apply fungicide if spreading quickly."
+    },
+    "Corn Leaf Blight": {
+        "severity": "high",
+        "description": "Large tan lesions; can rapidly destroy foliage.",
+        "treatment": "Remove infected debris; fungicide where recommended; rotate crops."
+    },
+    "Potato Early Blight": {
+        "severity": "medium",
+        "description": "Target-like concentric spots on leaves.",
+        "treatment": "Remove infected leaves; protectant fungicide; avoid overhead irrigation."
+    },
+    "Potato Late Blight": {
+        "severity": "high",
+        "description": "Dark, water-soaked lesions; white mold at margins in humid conditions.",
+        "treatment": "Immediate protectant/systemic fungicide; remove severely infected plants; improve airflow."
+    },
+    "Rice Brown Spot": {
+        "severity": "medium",
+        "description": "Small brown lesions on leaves and grains.",
+        "treatment": "Balanced nitrogen; field sanitation; fungicide where needed."
+    },
+    "Rice Leaf Blast": {
+        "severity": "high",
+        "description": "Spindle-shaped lesions with gray centers and brown borders.",
+        "treatment": "Avoid excess nitrogen; ensure spacing; use blast-recommended fungicide."
+    },
+    "Wheat Brown Rust": {
+        "severity": "medium",
+        "description": "Brown pustules scattered on leaves.",
+        "treatment": "Resistant cultivars; timely fungicide if disease pressure is high."
+    },
+    "Wheat Yellow Rust": {
+        "severity": "high",
+        "description": "Yellow/orange pustules in stripes on leaves.",
+        "treatment": "Resistant varieties; fungicide application when detected."
+    },
+    # Healthies per crop:
+    "Corn Healthy": {"severity": "none", "description": "Corn leaf looks healthy.", "treatment": "Maintain routine crop care."},
+    "Potato Healthy": {"severity": "none", "description": "Potato leaf looks healthy.", "treatment": "Maintain routine crop care."},
+    "Rice Healthy": {"severity": "none", "description": "Rice leaf looks healthy.", "treatment": "Maintain routine crop care."},
+    "Wheat Healthy": {"severity": "none", "description": "Wheat leaf looks healthy.", "treatment": "Maintain routine crop care."},
+}
 
-# @api_view(["POST"])
-# @parser_classes([MultiPartParser, FormParser])
-# def analyze_disease(request):
-#     if "file" not in request.FILES:
-#         return Response({"error": "No file uploaded"}, status=400)
+SEVERITY_COLOR = {"none": "emerald", "low": "sky", "medium": "amber", "high": "red"}
 
-#     file = request.FILES["file"]
+def _normalize_label(label: str) -> str:
+    if not label:
+        return "Unknown"
+    # Hugging Face model returns names like "Potato___Early_Blight"
+    # Replace triple underscores with ": " or space
+    clean = label.replace("___", " ").replace("_", " ")
+    return clean.strip()
 
-#     # Save file temporarily
-#     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[-1]) as tmp:
-#         for chunk in file.chunks():
-#             tmp.write(chunk)
-#         temp_path = tmp.name
 
-#     try:
-#         # Step 1: Send request to HuggingFace Space
-#         predict_url = f"{HF_SPACE_BASE}/gradio_api/call/predict"
+@csrf_exempt
+@require_POST
+def disease_detect(request):
+    hf_token = getattr(settings, "HF_API_TOKEN", None)
+    if not hf_token:
+        return HttpResponseBadRequest("HF_API_TOKEN missing in server configuration.")
 
-#         payload = {
-#             "data": [
-#                 {
-#                     "path": temp_path, 
-#                     "orig_name": file.name,
-#                     "meta": {"_type": "gradio.FileData"}
-#                 }
-#             ]
-#         }
+    file = request.FILES.get("image")
+    if not file:
+        return HttpResponseBadRequest("No image file uploaded as 'image'.")
+    if file.size > 10 * 1024 * 1024:  # 10 MB
+        return HttpResponseBadRequest("Image too large. Max 10MB.")
 
-#         response = requests.post(predict_url, json=payload)
+    image_bytes = file.read()
+    headers = {
+        "Authorization": f"Bearer {hf_token}",
+        "Accept": "application/json",
+        "Content-Type": "image/jpeg",   # <-- key fix!
+    }
 
-#         print("🔥 Raw HF Response:", response.text)
+    response_json = None
+    last_status = None
+    for _ in range(3):
+        r = requests.post(HF_API_URL, headers=headers, data=image_bytes, timeout=60)
+        last_status = r.status_code
+        try:
+            response_json = r.json()
+        except Exception:
+            response_json = None
 
-#         if response.status_code != 200:
-#             return Response({"error": "HF request failed", "raw": response.text}, status=500)
+        if r.status_code == 200 and isinstance(response_json, list):
+            break
+        if r.status_code == 503:
+            time.sleep(2)
+            continue
+        break
 
-#         result_json = response.json()
 
-#         # Hugging Face first returns {"event_id": "..."}
-#         if "event_id" in result_json:
-#             event_id = result_json["event_id"]
 
-#             # Step 2: Stream results
-#             stream_url = f"{HF_SPACE_BASE}/gradio_api/call/predict/{event_id}"
-#             stream_resp = requests.get(stream_url, stream=True)
-
-#             final_data = None
-#             for line in stream_resp.iter_lines():
-#                 if line:
-#                     decoded = line.decode("utf-8")
-#                     if decoded.startswith("data: "):
-#                         try:
-#                             final_data = decoded.replace("data: ", "")
-#                         except:
-#                             pass
-
-#             return Response({"prediction": final_data})
-
-#         return Response(result_json)
-
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=500)
-#     finally:
-#         if os.path.exists(temp_path):
-#             os.remove(temp_path)
-
-HF_API_URL = "https://api-inference.huggingface.co/models/urvi-35/plant-disease-detector"
-HF_TOKEN = "your_hf_token_here"  # set in env for security
-
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-
-@api_view(["POST"])
-@parser_classes([MultiPartParser, FormParser])
-def analyze_disease(request):
-    if "file" not in request.FILES:
-        return Response({"error": "No file uploaded"}, status=400)
-
-    file = request.FILES["file"]
-
-    try:
-        # Send to HF Inference API
-        response = requests.post(
-            HF_API_URL,
-            headers=headers,
-            files={"file": (file.name, file.read(), file.content_type)}
+    # Error handling
+    if not isinstance(response_json, list):
+        return JsonResponse(
+            {"error": "Inference failed",
+             "status_code": last_status,
+             "details": response_json},
+            status=502
         )
 
-        if response.status_code != 200:
-            return Response({"error": "HF request failed", "raw": response.text}, status=500)
+    # Pick top-1 and top-3
+    predictions = sorted(response_json, key=lambda x: x.get("score", 0), reverse=True)
+    top1 = predictions[0]
+    label = _normalize_label(top1.get("label", "Unknown"))
+    score = float(top1.get("score", 0.0))
+    confidence_pct = int(round(score * 100))
 
-        result = response.json()
-        print("🌱 HF Response:", result)
+    # Map to UI fields
+    info = DISEASE_INFO.get(label, {
+        "severity": "medium",
+        "description": "Detected disease category.",
+        "treatment": "Follow integrated disease management best practices and local extension advice."
+    })
+    severity = info["severity"]
+    color = SEVERITY_COLOR.get(severity, "amber")
 
-        # Adapt this based on your model’s return format
-        prediction = result[0]["label"] if isinstance(result, list) else str(result)
+    result = {
+        "label": label,
+        "score": score,
+        "confidence": confidence_pct,
+        "severity": severity,
+        "color": color,
+        "description": info["description"],
+        "treatment": info["treatment"],
+    }
 
-        return Response({"prediction": prediction})
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return JsonResponse({
+        "result": result,
+        "top_k": predictions[:3]
+    })

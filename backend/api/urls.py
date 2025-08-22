@@ -20,5 +20,5 @@ urlpatterns = [
     path("scrape-schemes/", views.scrape_schemes, name="scrape_schemes"),
     path("yield/train/", views.train_yield_model, name="train_yield_model"),
     path("yield/predict/", views.predict_yield_endpoint, name="predict_yield"),
-    path("disease/analyze/", views.analyze_disease, name="analyze_disease"),
+    path("disease-detect/", views.disease_detect, name="disease_detect"),
 ]

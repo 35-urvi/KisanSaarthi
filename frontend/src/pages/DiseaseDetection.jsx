@@ -126,43 +126,52 @@ const DiseaseDetection = () => {
   // }
   const analyzeImage = async () => {
   if (!selectedImage) return;
+
   setIsAnalyzing(true);
 
-  const formData = new FormData();
-  formData.append("file", selectedImage);
-
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/disease/analyze/", {
+    const API_BASE =
+      import.meta?.env?.VITE_API_BASE ||
+      "http://127.0.0.1:8000"; // change if your backend runs elsewhere
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+
+    const res = await fetch(`${API_BASE}/api/disease-detect/`, {
       method: "POST",
       body: formData,
+      // No custom headers. No 'withcredentials' header!
+      // If you need cookies later, use { credentials: "include" } (no header).
     });
 
-    const data = await response.json();
-    console.log("API Response:", data);
-
-    if (data.error) {
-      throw new Error(data.error);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Server error");
     }
 
-    const prediction = data.prediction || "Unknown";
+    const data = await res.json();
+    const r = data.result;
+
+    // map server severity -> UI color
+    const severityColorMap = { none: "emerald", low: "sky", medium: "amber", high: "red" };
 
     setAnalysisResult({
-      disease: prediction,
-      confidence: 95, // placeholder until backend returns real score
-      description: `Detected condition: ${prediction}`,
-      treatment: "Consult agricultural guidelines for treatment steps.",
-      severity: prediction.toLowerCase().includes("healthy") ? "none" : "medium",
-      color: prediction.toLowerCase().includes("healthy") ? "emerald" : "amber",
+      disease: r.label,
+      confidence: r.confidence,      // already in %
+      description: r.description,
+      treatment: r.treatment,
+      severity: r.severity,
+      color: severityColorMap[r.severity] || "amber",
     });
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (err) {
+    console.error(err);
     setAnalysisResult({
-      disease: "Error",
+      disease: "Analysis failed",
       confidence: 0,
-      description: "Could not process the image.",
-      treatment: "Try again with a different image.",
-      severity: "high",
-      color: "red",
+      description: "We couldn't analyze this image. Please try again with a clear leaf photo.",
+      treatment: "Ensure good lighting, single leaf in focus, no blur.",
+      severity: "low",
+      color: "amber",
     });
   } finally {
     setIsAnalyzing(false);
@@ -242,10 +251,10 @@ const DiseaseDetection = () => {
                 </h1>
                 <p className="text-red-100 text-lg">Upload crop images for instant AI-powered disease identification</p>
               </div>
-              <div className="mt-4 md:mt-0 text-right">
+              {/* <div className="mt-4 md:mt-0 text-right">
                 <p className="text-red-100">Powered by AI</p>
                 <p className="text-xl font-semibold">94.2% Accuracy</p>
-              </div>
+              </div> */}
             </div>
           </motion.div>
 
@@ -393,7 +402,7 @@ const DiseaseDetection = () => {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-white rounded-2xl p-6 shadow-lg border border-stone-200 h-full"
+                className="bg-white rounded-2xl p-6 shadow-lg border border-stone-200"
               >
                 <h2 className="text-xl font-bold text-stone-800 mb-6 flex items-center gap-2">
                   <Leaf className="w-6 h-6 text-emerald-600" />
@@ -413,7 +422,7 @@ const DiseaseDetection = () => {
                     className="space-y-4 h-full flex flex-col"
                   >
                     {/* Disease Status */}
-                    <div className={`p-4 rounded-xl border-2 h-20 ${
+                    <div className={`p-4 rounded-xl border-2 ${
                       analysisResult.severity === 'none' ? 'bg-emerald-50 border-emerald-200' :
                       analysisResult.severity === 'medium' ? 'bg-amber-50 border-amber-200' :
                       'bg-red-50 border-red-200'
@@ -439,13 +448,13 @@ const DiseaseDetection = () => {
                     </div>
 
                     {/* Treatment Recommendation */}
-                    {/* <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl flex-1">
+                    <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl flex-1">
                       <h4 className="text-md font-semibold text-stone-800 mb-2 flex items-center gap-2">
                         <Info className="w-4 h-4 text-blue-600" />
                         Recommended Treatment
                       </h4>
                       <p className="text-stone-600 text-sm leading-relaxed">{analysisResult.treatment}</p>
-                    </div> */}
+                    </div> 
 
                     {/* Action Buttons */}
                     <div className="space-y-2">

@@ -237,13 +237,13 @@ const FertilizerGuide = () => {
                 </h1>
                 <p className="text-emerald-100 text-lg">Get AI-powered fertilizer recommendations based on your crop and soil nutrient levels</p>
               </div>
-              <div className="mt-4 md:mt-0 text-right">
+              {/* <div className="mt-4 md:mt-0 text-right">
                 <p className="text-emerald-100">Analysis Status</p>
                 <p className="text-xl font-semibold flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
                   Ready to Analyze
                 </p>
-              </div>
+              </div> */}
             </div>
           </motion.div>
 

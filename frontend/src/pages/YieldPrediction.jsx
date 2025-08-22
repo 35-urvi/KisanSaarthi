@@ -199,13 +199,13 @@ const YieldPrediction = () => {
                 </h1>
                 <p className="text-emerald-100 text-lg">Predict your crop yield based on historical data and current conditions</p>
               </div>
-              <div className="mt-4 md:mt-0 text-right">
+              {/* <div className="mt-4 md:mt-0 text-right">
                 <p className="text-emerald-100">Prediction Model</p>
                 <p className="text-xl font-semibold flex items-center gap-2">
                   <Target className="w-5 h-5" />
                   AI-Powered
                 </p>
-              </div>
+              </div> */}
             </div>
           </motion.div>
 
